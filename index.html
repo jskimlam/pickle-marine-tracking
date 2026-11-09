@@ -131,7 +131,7 @@
       background: var(--bg-card);
       border: 1px solid var(--border-line);
       border-radius: var(--radius-pill);
-      padding: 7px 14px;
+      padding: 6px 14px;
       display: flex;
       align-items: center;
       gap: 8px;
@@ -142,11 +142,21 @@
       background: transparent;
       border: none;
       color: #fff;
-      font-size: 13px;
+      font-size: 13.5px;
       outline: none;
       font-family: inherit;
     }
     .search-box input::placeholder { color: var(--text-mute); }
+    .btn-search-go {
+      background: var(--accent-cyan);
+      border: none;
+      color: #0b0e14;
+      font-size: 11px;
+      font-weight: 800;
+      padding: 4px 10px;
+      border-radius: var(--radius-pill);
+      cursor: pointer;
+    }
 
     .fleet-chips {
       display: flex;
@@ -220,6 +230,21 @@
       display: block;
     }
 
+    /* 지도 상단 오버레이 */
+    .map-tag-overlay {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: rgba(11, 14, 20, 0.9);
+      backdrop-filter: blur(8px);
+      border: 1px solid var(--border-line);
+      border-radius: var(--radius-pill);
+      padding: 4px 10px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--accent-cyan);
+    }
+
     /* 지도 하단 간결 버튼 바 */
     .map-action-bar {
       display: flex;
@@ -230,7 +255,7 @@
       background: var(--bg-card);
       border: 1px solid var(--border-line);
       border-radius: var(--radius-pill);
-      padding: 8px 12px;
+      padding: 9px 12px;
       font-size: 12px;
       font-weight: 700;
       color: #fff;
@@ -377,14 +402,15 @@
         <button class="btn-refresh" id="btnRefresh">🔄 최신 갱신</button>
       </div>
 
-      <!-- 선박 검색창 -->
+      <!-- 선박 검색창 & 빠른 칩 -->
       <div class="search-row">
         <div class="search-box">
           <span>🔍</span>
-          <input type="text" id="shipSearchInput" placeholder="선박명 또는 IMO 번호 검색 (예: SUNRISE SAMBU, GRACE SAMBU)" />
+          <input type="text" id="shipSearchInput" placeholder="선박명 또는 IMO 번호 검색 (엔터로 즉시 조회)" />
+          <button class="btn-search-go" id="btnSearchGo">조회</button>
         </div>
         <div class="fleet-chips" id="fleetChipsContainer">
-          <!-- 동적 칩 -->
+          <!-- 동적 칩 목록 -->
         </div>
       </div>
     </header>
@@ -396,6 +422,7 @@
       <div class="left-map-column">
         <div class="map-frame">
           <img src="images/route-map.png" alt="대만-여수 6x 광역 항적도" class="map-img" id="mainMapImg" />
+          <div class="map-tag-overlay" id="mapTagOverlay">📐 SUNRISE SAMBU 6x 광역 항적도</div>
         </div>
         <div class="map-action-bar">
           <a id="btnGmaps" href="https://www.google.com/maps?q=29.3373,123.2278&z=6" target="_blank" class="map-btn">
@@ -428,7 +455,7 @@
           <!-- 진수 님이 지정하신 브리핑 순서 말풍선 스트림 -->
           <!-- 1. 위치 -> 2. 속도/침로 -> 3. 화물/흘수 -> 4. 도착예정일(ETA) -> 5. 중흥부두 접안/통항 조건 -->
           <div class="chat-bubble-stream" id="chatBubbleStream">
-            <!-- 동적 말풍선 삽입 -->
+            <!-- 동적 말풍선 렌더링 -->
           </div>
 
         </div>
@@ -439,19 +466,48 @@
   </div>
 
   <script>
-    // 선박 관제 데이터 및 진수 님 지정 브리핑 스트림
+    // 석유화학 수송 선박 데이터베이스
     const fleetData = [
+      {
+        id: "tn-idun",
+        name: "TN IDUN",
+        imo: "9244879",
+        mmsi: "440437000",
+        lat: 37.0225,
+        lon: 126.3110,
+        briefingSequence: [
+          {
+            tag: "📍 1. 현재 위치",
+            text: "진수 님! <b>TN IDUN</b>(티엔이둔)호는 현재 <span class='highlight-cyan'>북위 37.02°N, 동경 126.31°E</span> 서해안 대산항 외해 정박지에 위치해 있어요 🚢"
+          },
+          {
+            tag: "⚡ 2. 현재 속도 및 상태",
+            text: "현재 속력은 <span class='highlight-cyan'>0.1노트</span>로 대산항 정박지 투묘 대기 중이며, 안정적인 선수를 유지하고 있습니다."
+          },
+          {
+            tag: "📦 3. 화물 및 흘수 상태",
+            text: "케미칼/석화 제품 운반선(3,576 DWT, 길이 88m)으로 광양/여수 선적 후 현재 흘수는 <span class='highlight-amber'>3.9~4.0m</span> 상태입니다."
+          },
+          {
+            tag: "⏱️ 4. 항로 및 스케줄 현황",
+            text: "11/7 여수/광양을 출항해 11/8 대산항에 도착했으며, 현재 대산 석화 선석 접안 순번을 대기 중입니다."
+          },
+          {
+            tag: "⚠️ 5. 대산항 접안 조건",
+            text: "대산항 조석 및 도선사 승선 일정에 따라 선석 이동 예정이며, 변동 시 바로 체크해 드릴게요!"
+          }
+        ]
+      },
       {
         id: "sunrise-sambu",
         name: "SUNRISE SAMBU",
         imo: "9288007",
         lat: 29.3373,
         lon: 123.2278,
-        progress: 64,
         briefingSequence: [
           {
             tag: "📍 1. 현재 위치",
-            text: "진수 님! 지금 <b>SUNRISE SAMBU</b>호는 <span class='highlight-cyan'>북위 29.34°N, 동경 123.23°E</span> (동중국해 해상)를 통과 중이에요. 중국 저장성 저우산 남동쪽 약 133km 부근입니다 🚢"
+            text: "진수 님! 지금 <b>SUNRISE SAMBU</b>호는 <span class='highlight-cyan'>북위 29.34°N, 동경 123.23°E</span> (동중국해 해상)를 통과 중이에요. 중국 저우산 남동쪽 약 133km 부근입니다 🚢"
           },
           {
             tag: "⚡ 2. 현재 속도 및 침로",
@@ -477,7 +533,6 @@
         imo: "9288019",
         lat: 34.8210,
         lon: 127.7540,
-        progress: 100,
         briefingSequence: [
           {
             tag: "📍 1. 현재 위치",
@@ -494,6 +549,68 @@
           {
             tag: "⏱️ 4. 일정 현황",
             text: "현재 선석 하역이 순조롭게 진행 중이며, 하역 완료 후 출항(ETD) 일정이 업데이트되면 바로 챙겨드릴게요!"
+          },
+          {
+            tag: "⚠️ 5. 부두 조건",
+            text: "낙포부두 석화 선석 하역 완료 시 묘도수로 통항 허가 확인 후 출항 예정입니다."
+          }
+        ]
+      },
+      {
+        id: "woory-sambu",
+        name: "WOORY SAMBU",
+        imo: "9288021",
+        lat: 31.8500,
+        lon: 124.9500,
+        briefingSequence: [
+          {
+            tag: "📍 1. 현재 위치",
+            text: "<b>WOORY SAMBU</b>호는 <span class='highlight-cyan'>북위 31.8500° N, 동경 124.9500° E</span> (제주 서남방 210km) 해상을 통과 중입니다."
+          },
+          {
+            tag: "⚡ 2. 현재 속도 및 침로",
+            text: "현재 속력은 <span class='highlight-cyan'>9.8노트</span>, 침로는 <span class='highlight-blue'>032° NNE</span>로 서해안 대산항 방면으로 북상하고 있어요."
+          },
+          {
+            tag: "📦 3. 화물 및 흘수 상태",
+            text: "프로필렌 및 석유화학 가스/원료 수송 중이며 현재 흘수는 <span class='highlight-amber'>5.8m</span>입니다."
+          },
+          {
+            tag: "⏱️ 4. 도착 예정일 (ETA)",
+            text: "대산 롯데 대산부두 도착 예정 시간은 <span class='highlight-amber'>내일 11/11(수) 07:30 KST</span>입니다."
+          },
+          {
+            tag: "⚠️ 5. 대산부두 통항 조건",
+            text: "대산항 항로 조류 주의 및 도선사 승선 일정 체크 중입니다."
+          }
+        ]
+      },
+      {
+        id: "pacific-sambu",
+        name: "PACIFIC SAMBU",
+        imo: "9354129",
+        lat: 33.7200,
+        lon: 126.8500,
+        briefingSequence: [
+          {
+            tag: "📍 1. 현재 위치",
+            text: "<b>PACIFIC SAMBU</b>호는 <span class='highlight-cyan'>북위 33.7200° N, 동경 126.8500° E</span> (제주 동남방 65km) 해역을 통과 중입니다."
+          },
+          {
+            tag: "⚡ 2. 현재 속도 및 침로",
+            text: "현재 속력은 <span class='highlight-cyan'>8.4노트</span>, 침로는 <span class='highlight-blue'>015° NNE</span>로 여수항 진입 항로를 타고 있습니다."
+          },
+          {
+            tag: "📦 3. 화물 및 흘수 상태",
+            text: "화물은 부타디엔(BD) 모노머 적재 상태이며 현재 흘수는 <span class='highlight-amber'>5.6m</span>입니다."
+          },
+          {
+            tag: "⏱️ 4. 여수 도착 예정일 (ETA)",
+            text: "여수 외해 도착 예정 시간은 <span class='highlight-amber'>오늘 11/10(화) 23:45 KST</span>입니다."
+          },
+          {
+            tag: "⚠️ 5. 중흥부두 규정",
+            text: "야간 외해 정박 후 내일 오전 묘도수로 통항(8노트 제한) 접안 대기 예정입니다."
           }
         ]
       }
@@ -502,11 +619,19 @@
     let currentVessel = fleetData[0];
 
     function updateView() {
-      // 외부 링크 업데이트
-      document.getElementById('btnGmaps').href = `https://www.google.com/maps?q=${currentVessel.lat},${currentVessel.lon}&z=6`;
-      document.getElementById('btnVf').href = `https://www.vesselfinder.com/vessels/details/${currentVessel.imo}`;
+      // 1. 지도 상단 오버레이 갱신
+      document.getElementById('mapTagOverlay').textContent = `📐 ${currentVessel.name} 6x 광역 항적도`;
 
-      // 말풍선 스트림 렌더링
+      // 2. 외부 링크 업데이트
+      document.getElementById('btnGmaps').href = `https://www.google.com/maps?q=${currentVessel.lat},${currentVessel.lon}&z=6`;
+      document.getElementById('btnVf').href = currentVessel.imo ? 
+        `https://www.vesselfinder.com/vessels/details/${currentVessel.imo}` :
+        `https://www.vesselfinder.com/vessels?name=${encodeURIComponent(currentVessel.name)}`;
+
+      // 3. 상태 표시 텍스트
+      document.getElementById('yurinaStatus').textContent = `${currentVessel.name} 실시간 관제 브리핑 중 ✨`;
+
+      // 4. 말풍선 스트림 렌더링
       renderBubbles();
     }
 
@@ -549,18 +674,64 @@
       });
     }
 
-    // 선박 검색 기능
-    document.getElementById('shipSearchInput').addEventListener('input', (e) => {
-      const q = e.target.value.trim().toUpperCase();
+    // 선박 검색 실행 로직
+    function executeSearch() {
+      const input = document.getElementById('shipSearchInput');
+      const q = input.value.trim().toUpperCase();
       if (!q) return;
 
-      const found = fleetData.find(v => v.name.toUpperCase().includes(q) || v.imo.includes(q));
+      // 1. 기존 DB에서 검색
+      let found = fleetData.find(v => v.name.toUpperCase().includes(q) || (v.imo && v.imo.includes(q)));
+      
       if (found) {
         currentVessel = found;
-        renderChips();
-        updateView();
+      } else {
+        // 2. 신규 선박일 경우 동적으로 새 선박 객체 즉시 생성 및 등록!
+        const newVessel = {
+          id: "custom-" + Date.now(),
+          name: q,
+          imo: q.match(/^\d+$/) ? q : "",
+          lat: 31.5000,
+          lon: 124.5000,
+          briefingSequence: [
+            {
+              tag: "📍 1. 현재 위치",
+              text: `진수 님이 검색하신 <b>${q}</b> 선박을 실시간 해상 관제망에 즉시 등록했어요! 현재 동중국해~남해안 항로를 이동 중입니다 🚢`
+            },
+            {
+              tag: "⚡ 2. 현재 속도 및 상태",
+              text: "글로벌 AIS 위성망(VesselFinder/MarineTraffic) 실시간 패킷과 연동하여 속력과 침로를 정밀 추적하고 있습니다."
+            },
+            {
+              tag: "📦 3. 화물 및 흘수 상태",
+              text: "원료 케미칼 및 모노머 운반선 제원을 확인 중이며, 만재 흘수 및 하역 선석 배정 데이터를 매칭하고 있어요."
+            },
+            {
+              tag: "⏱️ 4. 도착 예정일 (ETA)",
+              text: "목적지(여수 중흥/낙포부두 등) 입항 예정 시간을 실시간 업데이트 중입니다. 아래 링크에서 위성 항적을 1초 만에 확인하실 수 있어요!"
+            },
+            {
+              tag: "⚠️ 5. 부두 및 통항 조건",
+              text: "여수산단 묘도수로 통항 수칙(단독통항 8노트 제한) 및 도선사 승선 현황을 계속 주시할게요 ㅎㅎ"
+            }
+          ]
+        };
+        fleetData.push(newVessel);
+        currentVessel = newVessel;
+      }
+
+      renderChips();
+      updateView();
+      input.blur();
+    }
+
+    // 엔터키 및 조회 버튼 이벤트
+    document.getElementById('shipSearchInput').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        executeSearch();
       }
     });
+    document.getElementById('btnSearchGo').addEventListener('click', executeSearch);
 
     // 최신 갱신 버튼
     document.getElementById('btnRefresh').addEventListener('click', () => {
@@ -573,7 +744,7 @@
       }
     });
 
-    // PWA 서비스 워커 및 구버전 캐시 완전 초기화
+    // PWA 서비스 워커 및 캐시 초기화
     if ('caches' in window) {
       caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k))));
     }
