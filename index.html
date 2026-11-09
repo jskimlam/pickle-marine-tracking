@@ -49,7 +49,7 @@
       padding: 0 12px 28px 12px;
     }
 
-    /* 상단 간결 헤더 */
+    /* 상단 헤더 바 */
     .top-header {
       position: sticky;
       top: 0;
@@ -61,6 +61,11 @@
       padding: 10px 4px;
       margin-bottom: 12px;
       display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .header-row {
+      display: flex;
       align-items: center;
       justify-content: space-between;
     }
@@ -69,9 +74,9 @@
       align-items: center;
       gap: 8px;
     }
-    .brand-icon { font-size: 20px; }
+    .brand-icon { font-size: 22px; }
     .brand-title {
-      font-size: 15.5px;
+      font-size: 16px;
       font-weight: 800;
       color: #fff;
       display: flex;
@@ -102,12 +107,54 @@
       50% { transform: scale(1.4); opacity: 0.5; }
       100% { transform: scale(0.8); opacity: 1; }
     }
+    .btn-refresh {
+      background: transparent;
+      border: 1px solid var(--border-line);
+      color: var(--text-sub);
+      border-radius: var(--radius-pill);
+      padding: 4px 10px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
 
-    /* 선박 전환 칩 */
+    /* 선박 검색창 & 빠른 칩 */
+    .search-row {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .search-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border-line);
+      border-radius: var(--radius-pill);
+      padding: 7px 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.25);
+    }
+    .search-box input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: #fff;
+      font-size: 13px;
+      outline: none;
+      font-family: inherit;
+    }
+    .search-box input::placeholder { color: var(--text-mute); }
+
     .fleet-chips {
       display: flex;
       gap: 6px;
+      overflow-x: auto;
+      scrollbar-width: none;
     }
+    .fleet-chips::-webkit-scrollbar { display: none; }
     .chip {
       background: var(--bg-card);
       border: 1px solid var(--border-line);
@@ -120,6 +167,7 @@
       display: inline-flex;
       align-items: center;
       gap: 5px;
+      white-space: nowrap;
       transition: all 0.2s ease;
     }
     .chip.active {
@@ -166,7 +214,7 @@
     .map-img {
       width: 100%;
       height: auto;
-      max-height: 520px;
+      max-height: 540px;
       object-fit: cover;
       object-position: center;
       display: block;
@@ -216,7 +264,7 @@
       box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
     }
 
-    /* 유리나 프로필 헤더 (보내주신 캡처 얼굴 그대로) */
+    /* 유리나 프로필 헤더 */
     .yurina-profile-row {
       display: flex;
       align-items: center;
@@ -316,17 +364,28 @@
 
   <div id="app">
 
-    <!-- 상단 헤더 -->
+    <!-- 상단 헤더 & 검색 바 -->
     <header class="top-header">
-      <div class="brand">
-        <span class="brand-icon">🚢</span>
-        <div class="brand-title">
-          피클마린트래킹
-          <span class="live-chip"><span class="live-dot"></span>AIS LIVE</span>
+      <div class="header-row">
+        <div class="brand">
+          <span class="brand-icon">🚢</span>
+          <div class="brand-title">
+            피클마린트래킹
+            <span class="live-chip"><span class="live-dot"></span>AIS LIVE</span>
+          </div>
         </div>
+        <button class="btn-refresh" id="btnRefresh">🔄 최신 갱신</button>
       </div>
-      <div class="fleet-chips" id="fleetChipsContainer">
-        <!-- 동적 칩 -->
+
+      <!-- 선박 검색창 -->
+      <div class="search-row">
+        <div class="search-box">
+          <span>🔍</span>
+          <input type="text" id="shipSearchInput" placeholder="선박명 또는 IMO 번호 검색 (예: SUNRISE SAMBU, GRACE SAMBU)" />
+        </div>
+        <div class="fleet-chips" id="fleetChipsContainer">
+          <!-- 동적 칩 -->
+        </div>
       </div>
     </header>
 
@@ -392,7 +451,7 @@
         briefingSequence: [
           {
             tag: "📍 1. 현재 위치",
-            text: "진수 님! 지금 <b>SUNRISE SAMBU</b>호는 <span class='highlight-cyan'>북위 29.34°N, 동경 123.23°E</span> (동중국해 해상)를 통과 중이에요. 중국 저우산 남동쪽 약 133km 부근입니다 🚢"
+            text: "진수 님! 지금 <b>SUNRISE SAMBU</b>호는 <span class='highlight-cyan'>북위 29.34°N, 동경 123.23°E</span> (동중국해 해상)를 통과 중이에요. 중국 저장성 저우산 남동쪽 약 133km 부근입니다 🚢"
           },
           {
             tag: "⚡ 2. 현재 속도 및 침로",
@@ -480,7 +539,7 @@
       fleetData.forEach(v => {
         const chip = document.createElement('div');
         chip.className = `chip ${v.id === currentVessel.id ? 'active' : ''}`;
-        chip.innerHTML = `🚢 ${v.name} (${v.progress}%)`;
+        chip.innerHTML = `🚢 ${v.name}`;
         chip.addEventListener('click', () => {
           currentVessel = v;
           renderChips();
@@ -490,7 +549,31 @@
       });
     }
 
-    // PWA 서비스 워커
+    // 선박 검색 기능
+    document.getElementById('shipSearchInput').addEventListener('input', (e) => {
+      const q = e.target.value.trim().toUpperCase();
+      if (!q) return;
+
+      const found = fleetData.find(v => v.name.toUpperCase().includes(q) || v.imo.includes(q));
+      if (found) {
+        currentVessel = found;
+        renderChips();
+        updateView();
+      }
+    });
+
+    // 최신 갱신 버튼
+    document.getElementById('btnRefresh').addEventListener('click', () => {
+      if ('caches' in window) {
+        caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k)))).then(() => {
+          window.location.reload(true);
+        });
+      } else {
+        window.location.reload(true);
+      }
+    });
+
+    // PWA 서비스 워커 등록
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('sw.js').catch(err => console.log(err));
     }
