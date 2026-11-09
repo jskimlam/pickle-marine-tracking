@@ -700,7 +700,7 @@
   </div>
 
   <script>
-    // 기본 선박 원본 정의
+    // 기본 선박 원본 정의 (현실적인 해상 항로 곡선 웨이포인트 탑재)
     const defaultFleet = [
       {
         id: "sunrise-sambu",
@@ -715,7 +715,22 @@
         cargo: "스타이렌모노머(SM) 만재",
         origin: { name: "대만 안핑항", lat: 22.9900, lon: 120.1500, time: "11/7 출항" },
         dest: { name: "여수 중흥부두", lat: 34.8450, lon: 127.7320, eta: "오늘 20:00 KST" },
-        pilotRule: "묘도수로 단독통항(교행 금지) 및 8노트 속도 제한"
+        pilotRule: "묘도수로 단독통항(교행 금지) 및 8노트 속도 제한",
+        pastRoute: [
+          [22.9900, 120.1500],
+          [24.1000, 120.9000],
+          [25.5000, 121.9000],
+          [27.3000, 122.6000],
+          [29.3373, 123.2278]
+        ],
+        futureRoute: [
+          [29.3373, 123.2278],
+          [31.2000, 124.5000],
+          [32.8000, 125.8000],
+          [34.1000, 127.3500],
+          [34.6500, 127.8500],
+          [34.8450, 127.7320]
+        ]
       },
       {
         id: "pacific-sambu",
@@ -728,9 +743,20 @@
         course: "015° NNE",
         draught: "5.6m",
         cargo: "부타디엔(BD) 모노머 적재",
-        origin: { name: "울산/일본항", lat: 35.4500, lon: 129.4000, time: "11/8 출항" },
+        origin: { name: "동중국해 외해", lat: 30.5000, lon: 125.2000, time: "11/8 진입" },
         dest: { name: "여수 중흥부두", lat: 34.8450, lon: 127.7320, eta: "오늘 23:45 KST" },
-        pilotRule: "외해 투묘 대기 후 내일 오전 묘도수로 통항 접안"
+        pilotRule: "외해 투묘 대기 후 내일 오전 묘도수로 통항 접안",
+        pastRoute: [
+          [30.5000, 125.2000],
+          [32.0000, 126.0000],
+          [33.7200, 126.8500]
+        ],
+        futureRoute: [
+          [33.7200, 126.8500],
+          [34.3000, 127.4500],
+          [34.6500, 127.8500],
+          [34.8450, 127.7320]
+        ]
       },
       {
         id: "tn-idun",
@@ -745,7 +771,22 @@
         cargo: "케미칼/석화제품 운반선 (3,576 DWT)",
         origin: { name: "광양/여수항", lat: 34.8620, lon: 127.7780, time: "11/7 출항" },
         dest: { name: "대산항 석화부두", lat: 37.0080, lon: 126.4150, eta: "대산 정박지 대기 중" },
-        pilotRule: "대산항 조석 및 도선사 승선 순번에 따라 선석 이동"
+        pilotRule: "대산항 조석 및 도선사 승선 순번에 따라 선석 이동",
+        pastRoute: [
+          [34.8620, 127.7780],
+          [34.4000, 127.4500],
+          [34.1800, 126.8000],
+          [34.3500, 125.9500],
+          [35.3000, 125.7000],
+          [36.2000, 125.8000],
+          [36.7500, 125.9500],
+          [37.0225, 126.3110]
+        ],
+        futureRoute: [
+          [37.0225, 126.3110],
+          [37.0300, 126.3700],
+          [37.0080, 126.4150]
+        ]
       },
       {
         id: "grace-sambu",
@@ -760,14 +801,74 @@
         cargo: "석유화학 원료 모노머 하역 중",
         origin: { name: "울산항", lat: 35.5000, lon: 129.3800, time: "하역 진행" },
         dest: { name: "여수 낙포부두", lat: 34.8210, lon: 127.7540, eta: "접안 완료" },
-        pilotRule: "낙포부두 선석 하역 완료 후 출항(ETD) 대기"
+        pilotRule: "낙포부두 선석 하역 완료 후 출항(ETD) 대기",
+        pastRoute: [
+          [35.5000, 129.3800],
+          [35.3400, 129.4000],
+          [35.1500, 129.2800],
+          [35.0300, 129.1000],
+          [34.7000, 128.7500],
+          [34.5800, 128.5000],
+          [34.6200, 128.0500],
+          [34.7200, 127.8500],
+          [34.8210, 127.7540]
+        ],
+        futureRoute: []
       }
     ];
 
-    // 로컬스토리지에서 사용자 선박 목록 로드
+    // 육지를 피하는 현실적인 해상 항로 웨이포인트 보간기 (해상 우회 알고리즘)
+    function buildSeaWaypoints(start, end) {
+      const [sLat, sLon] = start;
+      const [eLat, eLon] = end;
+
+      if (Math.abs(sLat - eLat) < 0.01 && Math.abs(sLon - eLon) < 0.01) return [];
+
+      const points = [start];
+
+      // 울산/부산(동해남부) <-> 여수/광양(남해중부) 간 이동 시: 남해안 외해 우회
+      if ((sLon > 128.8 && eLon < 128.2) || (sLon < 128.2 && eLon > 128.8)) {
+        if (sLon > eLon) { // 동 -> 서 (울산 -> 여수)
+          points.push([35.0300, 129.1000]); // 부산 태종대 외해
+          points.push([34.7000, 128.7500]); // 거제도 남단 해상
+          points.push([34.5800, 128.5000]); // 통영 매물도 남측
+          points.push([34.6200, 128.0500]); // 남해도 남단
+          points.push([34.7200, 127.8500]); // 여수만 입구
+        } else { // 서 -> 동 (여수 -> 울산)
+          points.push([34.7200, 127.8500]);
+          points.push([34.6200, 128.0500]);
+          points.push([34.5800, 128.5000]);
+          points.push([34.7000, 128.7500]);
+          points.push([35.0300, 129.1000]);
+        }
+      } 
+      // 남해 <-> 서해 (여수 <-> 대산/인천) 간 이동 시: 완도·진도 외해 서해안 회랑 우회
+      else if ((sLat < 35.2 && eLat > 36.5 && sLon > 126.5) || (sLat > 36.5 && eLat < 35.2 && eLon > 126.5)) {
+        if (sLat < eLat) { // 남 -> 북
+          points.push([34.4000, 127.4500]); // 고흥 남측
+          points.push([34.1800, 126.8000]); // 완도 남측
+          points.push([34.3500, 125.9500]); // 진도 서측 해상
+          points.push([35.3000, 125.7000]); // 서해 남포 해역
+          points.push([36.2000, 125.8000]); // 어청도 외해
+          points.push([36.7500, 125.9500]); // 격렬비열도 서측
+        } else { // 북 -> 남
+          points.push([36.7500, 125.9500]);
+          points.push([36.2000, 125.8000]);
+          points.push([35.3000, 125.7000]);
+          points.push([34.3500, 125.9500]);
+          points.push([34.1800, 126.8000]);
+          points.push([34.4000, 127.4500]);
+        }
+      }
+
+      points.push(end);
+      return points;
+    }
+
+    // 로컬스토리지에서 사용자 선박 목록 로드 (v4: 해상 항로 곡선 지원)
     let fleetData = [];
     try {
-      const stored = localStorage.getItem('pickle_fleet_data_v3');
+      const stored = localStorage.getItem('pickle_fleet_data_v4');
       if (stored) fleetData = JSON.parse(stored);
     } catch (e) {}
 
@@ -778,7 +879,7 @@
 
     function saveFleet() {
       try {
-        localStorage.setItem('pickle_fleet_data_v3', JSON.stringify(fleetData));
+        localStorage.setItem('pickle_fleet_data_v4', JSON.stringify(fleetData));
       } catch (e) {}
     }
 
@@ -1012,18 +1113,42 @@
         const dLat = currentVessel.dest.lat;
         const dLon = currentVessel.dest.lon;
 
-        L.polyline([[oLat, oLon], [vLat, vLon]], {
-          color: '#06b6d4',
-          weight: 3.5,
-          opacity: 0.85
-        }).addTo(routeLayerGroup);
+        // 1. 지나온 해상 항로 (파란색 실선, 둥근 곡선 연결)
+        let pastPoints = [];
+        if (currentVessel.pastRoute && currentVessel.pastRoute.length > 1) {
+          pastPoints = currentVessel.pastRoute;
+        } else if (currentVessel.origin) {
+          pastPoints = buildSeaWaypoints([oLat, oLon], [vLat, vLon]);
+        }
 
-        L.polyline([[vLat, vLon], [dLat, dLon]], {
-          color: '#f59e0b',
-          weight: 3,
-          dashArray: '6, 8',
-          opacity: 0.85
-        }).addTo(routeLayerGroup);
+        if (pastPoints.length > 1) {
+          L.polyline(pastPoints, {
+            color: '#06b6d4',
+            weight: 3.5,
+            opacity: 0.85,
+            lineJoin: 'round',
+            lineCap: 'round'
+          }).addTo(routeLayerGroup);
+        }
+
+        // 2. 앞으로 갈 예정 해상 항로 (주황색 점선, 둥근 곡선 연결)
+        let futurePoints = [];
+        if (currentVessel.futureRoute && currentVessel.futureRoute.length > 1) {
+          futurePoints = currentVessel.futureRoute;
+        } else if (currentVessel.dest && (Math.abs(vLat - dLat) > 0.01 || Math.abs(vLon - dLon) > 0.01)) {
+          futurePoints = buildSeaWaypoints([vLat, vLon], [dLat, dLon]);
+        }
+
+        if (futurePoints.length > 1) {
+          L.polyline(futurePoints, {
+            color: '#f59e0b',
+            weight: 3,
+            dashArray: '6, 8',
+            opacity: 0.85,
+            lineJoin: 'round',
+            lineCap: 'round'
+          }).addTo(routeLayerGroup);
+        }
 
         const originIcon = L.divIcon({
           className: 'port-marker',
