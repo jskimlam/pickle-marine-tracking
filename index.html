@@ -13,6 +13,7 @@
     :root {
       --bg-page: #0b0e14;
       --bg-card: #141824;
+      --bg-card-sub: #1a2030;
       --border-line: #222b40;
       --text-main: #f1f5f9;
       --text-sub: #94a3b8;
@@ -22,8 +23,8 @@
       --accent-green: #10b981;
       --accent-amber: #f59e0b;
       --accent-lilac: #c084fc;
-      --bubble-bg: #1a2030;
-      --bubble-border: #28334a;
+      --bubble-bg: #1e2638;
+      --bubble-border: #2d3852;
       --radius-card: 16px;
       --radius-pill: 999px;
     }
@@ -42,12 +43,13 @@
       display: flex;
       flex-direction: column;
       min-height: 100%;
-      max-width: 680px;
+      width: 100%;
+      max-width: 1280px;
       margin: 0 auto;
-      padding-bottom: 30px;
+      padding: 0 12px 28px 12px;
     }
 
-    /* 상단 헤더 바 */
+    /* 상단 간결 헤더 */
     .top-header {
       position: sticky;
       top: 0;
@@ -56,12 +58,8 @@
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
       border-bottom: 1px solid var(--border-line);
-      padding: 12px 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-    .header-row {
+      padding: 10px 4px;
+      margin-bottom: 12px;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -71,9 +69,9 @@
       align-items: center;
       gap: 8px;
     }
-    .brand-icon { font-size: 22px; }
+    .brand-icon { font-size: 20px; }
     .brand-title {
-      font-size: 16px;
+      font-size: 15.5px;
       font-weight: 800;
       color: #fff;
       display: flex;
@@ -108,24 +106,20 @@
     /* 선박 전환 칩 */
     .fleet-chips {
       display: flex;
-      gap: 8px;
-      overflow-x: auto;
-      scrollbar-width: none;
+      gap: 6px;
     }
-    .fleet-chips::-webkit-scrollbar { display: none; }
     .chip {
       background: var(--bg-card);
       border: 1px solid var(--border-line);
       border-radius: var(--radius-pill);
-      padding: 6px 14px;
-      font-size: 12px;
-      font-weight: 600;
+      padding: 5px 12px;
+      font-size: 11.5px;
+      font-weight: 700;
       color: var(--text-sub);
-      white-space: nowrap;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
-      gap: 6px;
+      gap: 5px;
       transition: all 0.2s ease;
     }
     .chip.active {
@@ -134,17 +128,35 @@
       color: #fff;
     }
 
-    /* 지도 섹션 (100% 로딩 보장 6x 광역 뷰) */
-    .map-container {
-      position: relative;
+    /* ============================================================ */
+    /* 좌우 2단 분할 레이아웃 (갤럭시 Z Fold8 최적화) */
+    /* ============================================================ */
+    .dashboard-split-layout {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
       width: 100%;
-      margin-top: 8px;
-      padding: 0 12px;
     }
+
+    @media (min-width: 680px) {
+      .dashboard-split-layout {
+        grid-template-columns: 1.1fr 1fr;
+        align-items: start;
+      }
+    }
+
+    /* ------------------------------------------------------------ */
+    /* [좌측] 간략화된 6x 광역 지도 프레임 */
+    /* ------------------------------------------------------------ */
+    .left-map-column {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
     .map-frame {
       position: relative;
       width: 100%;
-      height: 320px;
       background: #0d121c;
       border: 1px solid var(--border-line);
       border-radius: var(--radius-card);
@@ -153,135 +165,46 @@
     }
     .map-img {
       width: 100%;
-      height: 100%;
+      height: auto;
+      max-height: 520px;
       object-fit: cover;
       object-position: center;
       display: block;
     }
 
-    /* 지도 상단 오버레이 */
-    .map-hud-top {
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      right: 10px;
+    /* 지도 하단 간결 버튼 바 */
+    .map-action-bar {
       display: flex;
-      justify-content: space-between;
-      pointer-events: none;
+      gap: 8px;
     }
-    .map-scale-tag {
-      background: rgba(11, 14, 20, 0.88);
-      backdrop-filter: blur(8px);
-      border: 1px solid var(--border-line);
-      border-radius: var(--radius-pill);
-      padding: 4px 10px;
-      font-size: 11px;
-      font-weight: 700;
-      color: var(--accent-cyan);
-    }
-    .map-pos-tag {
-      background: rgba(11, 14, 20, 0.88);
-      backdrop-filter: blur(8px);
-      border: 1px solid var(--border-line);
-      border-radius: var(--radius-pill);
-      padding: 4px 10px;
-      font-size: 11px;
-      font-family: monospace;
-      color: #fff;
-    }
-
-    /* 실시간 레이더 펄스 마커 (선박 위치) */
-    .radar-blip-box {
-      position: absolute;
-      top: 50%;
-      left: 54%;
-      transform: translate(-50%, -50%);
-      pointer-events: none;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-    .radar-blip {
-      position: relative;
-      width: 22px;
-      height: 22px;
-    }
-    .radar-dot {
-      width: 10px;
-      height: 10px;
-      background: var(--accent-cyan);
-      border: 2px solid #ffffff;
-      border-radius: 50%;
-      position: absolute;
-      top: 6px;
-      left: 6px;
-      box-shadow: 0 0 8px rgba(6, 182, 212, 1);
-    }
-    .radar-ring {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 22px;
-      height: 22px;
-      border-radius: 50%;
-      border: 2px solid var(--accent-cyan);
-      animation: blipRing 1.8s infinite ease-out;
-    }
-    @keyframes blipRing {
-      0% { transform: scale(0.6); opacity: 1; }
-      100% { transform: scale(2.4); opacity: 0; }
-    }
-    .radar-ship-label {
-      margin-top: 4px;
-      background: rgba(11, 14, 20, 0.9);
-      border: 1px solid var(--accent-cyan);
-      border-radius: 4px;
-      padding: 2px 6px;
-      font-size: 10px;
-      font-weight: 800;
-      color: #fff;
-      white-space: nowrap;
-    }
-
-    /* 지도 하단 빠른 링크 버튼 */
-    .map-btn-row {
-      position: absolute;
-      bottom: 10px;
-      left: 10px;
-      right: 10px;
-      display: flex;
-      gap: 6px;
-    }
-    .map-action-btn {
+    .map-btn {
       flex: 1;
-      background: rgba(18, 22, 34, 0.92);
-      backdrop-filter: blur(10px);
+      background: var(--bg-card);
       border: 1px solid var(--border-line);
       border-radius: var(--radius-pill);
-      padding: 8px 10px;
-      font-size: 11.5px;
+      padding: 8px 12px;
+      font-size: 12px;
       font-weight: 700;
       color: #fff;
       text-decoration: none;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 5px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      gap: 6px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+      transition: background 0.2s ease;
     }
+    .map-btn:hover { background: rgba(30, 38, 56, 0.95); }
 
-    /* ============================================================ */
-    /* 유리나 AI 어시스턴트 말풍선 브리핑 섹션 (핵심 요청) */
-    /* ============================================================ */
-    .briefing-section {
-      margin-top: 14px;
-      padding: 0 12px;
+    /* ------------------------------------------------------------ */
+    /* [우측] 유리나 얼굴 & 5단계 순서별 말풍선 브리핑 */
+    /* ------------------------------------------------------------ */
+    .right-briefing-column {
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 10px;
     }
 
-    /* 메인 브리핑 카드 */
     .briefing-card {
       background: var(--bg-card);
       border: 1px solid var(--border-line);
@@ -290,19 +213,21 @@
       display: flex;
       flex-direction: column;
       gap: 14px;
-      box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
     }
 
-    /* 유리나 프로필 헤더 */
+    /* 유리나 프로필 헤더 (보내주신 캡처 얼굴 그대로) */
     .yurina-profile-row {
       display: flex;
       align-items: center;
       gap: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border-line);
     }
     .avatar-wrapper {
       position: relative;
-      width: 54px;
-      height: 54px;
+      width: 52px;
+      height: 52px;
       flex-shrink: 0;
     }
     .avatar-img {
@@ -310,7 +235,7 @@
       height: 100%;
       border-radius: 50%;
       display: block;
-      box-shadow: 0 4px 16px rgba(192, 132, 252, 0.35);
+      box-shadow: 0 4px 16px rgba(192, 132, 252, 0.4);
       animation: floatBreath 3.5s ease-in-out infinite;
     }
     @keyframes floatBreath {
@@ -359,9 +284,9 @@
       flex-direction: column;
       gap: 3px;
     }
-    .bubble-item .bubble-tag {
+    .bubble-tag {
       font-size: 11px;
-      font-weight: 700;
+      font-weight: 800;
       color: var(--accent-cyan);
       margin-left: 6px;
       display: flex;
@@ -385,169 +310,72 @@
     .highlight-cyan { color: var(--accent-cyan); font-weight: 700; }
     .highlight-amber { color: var(--accent-amber); font-weight: 700; }
     .highlight-blue { color: var(--accent-blue); font-weight: 700; }
-
-    /* 4대 핵심 지표 요약 바 */
-    .metrics-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 6px;
-      margin-top: 2px;
-    }
-    .metric-card {
-      background: rgba(28, 34, 51, 0.6);
-      border: 1px solid var(--border-line);
-      border-radius: 10px;
-      padding: 8px 6px;
-      text-align: center;
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
-    .metric-card .lbl { font-size: 10px; color: var(--text-mute); }
-    .metric-card .val { font-size: 13px; font-weight: 800; color: #fff; }
-
-    /* 하단 항해 진행 바 */
-    .progress-box {
-      margin-top: 4px;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-    .ports-row {
-      display: flex;
-      justify-content: space-between;
-      font-size: 11px;
-      font-weight: 600;
-      color: var(--text-sub);
-    }
-    .bar-bg {
-      width: 100%;
-      height: 5px;
-      background: #1e293b;
-      border-radius: var(--radius-pill);
-      overflow: hidden;
-    }
-    .bar-fill {
-      height: 100%;
-      background: linear-gradient(90deg, var(--accent-cyan), var(--accent-amber));
-      width: 64%;
-      border-radius: var(--radius-pill);
-      transition: width 0.4s ease;
-    }
   </style>
 </head>
 <body>
 
   <div id="app">
 
-    <!-- 상단 헤더 & 빠른 선박 선택 -->
+    <!-- 상단 헤더 -->
     <header class="top-header">
-      <div class="header-row">
-        <div class="brand">
-          <span class="brand-icon">🚢</span>
-          <div class="brand-title">
-            피클마린트래킹
-            <span class="live-chip"><span class="live-dot"></span>AIS LIVE</span>
-          </div>
+      <div class="brand">
+        <span class="brand-icon">🚢</span>
+        <div class="brand-title">
+          피클마린트래킹
+          <span class="live-chip"><span class="live-dot"></span>AIS LIVE</span>
         </div>
-        <span style="font-size:11px; color:var(--text-mute);">롯데케미칼 원료관제</span>
       </div>
-
-      <!-- 선박 전환 칩 -->
       <div class="fleet-chips" id="fleetChipsContainer">
-        <!-- 칩 동적 렌더링 -->
+        <!-- 동적 칩 -->
       </div>
     </header>
 
-    <!-- 지도 섹션 (100% 로딩 보장 6x 광역 항적도) -->
-    <section class="map-container">
-      <div class="map-frame">
-        <img src="images/route-map.png" alt="대만-여수 6x 광역 항적도" class="map-img" id="mainMapImg" />
+    <!-- 좌우 2단 분할 레이아웃 (갤럭시 Z Fold8) -->
+    <main class="dashboard-split-layout">
 
-        <!-- 지도 상단 HUD 태그 -->
-        <div class="map-hud-top">
-          <span class="map-scale-tag">📐 광역 6x 조망</span>
-          <span class="map-pos-tag" id="mapCoordTag">29.3373° N, 123.2278° E</span>
+      <!-- [좌측] 간략화된 6x 광역 지도 & 원터치 링크 -->
+      <div class="left-map-column">
+        <div class="map-frame">
+          <img src="images/route-map.png" alt="대만-여수 6x 광역 항적도" class="map-img" id="mainMapImg" />
         </div>
-
-        <!-- 실시간 레이더 펄스 마커 -->
-        <div class="radar-blip-box" id="radarBlipBox">
-          <div class="radar-blip">
-            <div class="radar-ring"></div>
-            <div class="radar-dot"></div>
-          </div>
-          <div class="radar-ship-label" id="radarShipLabel">SUNRISE SAMBU · 6.2 kn</div>
-        </div>
-
-        <!-- 지도 하단 원터치 액션 버튼 -->
-        <div class="map-btn-row">
-          <a id="btnGmaps" href="https://www.google.com/maps?q=29.3373,123.2278&z=6" target="_blank" class="map-action-btn">
-            <span>📍</span> 구글지도 6x 열기
+        <div class="map-action-bar">
+          <a id="btnGmaps" href="https://www.google.com/maps?q=29.3373,123.2278&z=6" target="_blank" class="map-btn">
+            <span>📍</span> 구글지도 6x 조망
           </a>
-          <a id="btnVf" href="https://www.vesselfinder.com/vessels/details/9288007" target="_blank" class="map-action-btn">
+          <a id="btnVf" href="https://www.vesselfinder.com/vessels/details/9288007" target="_blank" class="map-btn">
             <span>🌐</span> VesselFinder 실시간
           </a>
         </div>
       </div>
-    </section>
 
-    <!-- 유리나 AI 어시스턴트 말풍선 브리핑 섹션 (진수 님 지정 브리핑 순서) -->
-    <section class="briefing-section">
-      <div class="briefing-card">
-        
-        <!-- 유리나 프로필 헤더 -->
-        <div class="yurina-profile-row">
-          <div class="avatar-wrapper">
-            <img src="icons/yurina-avatar.png" alt="유리나" class="avatar-img" />
-          </div>
-          <div class="yurina-meta">
-            <div class="yurina-name-box">
-              <span class="yurina-name">유리나</span>
-              <span class="yurina-role-badge">AI 전담 비서</span>
+      <!-- [우측] 유리나 얼굴 & 5단계 순서별 말풍선 브리핑 -->
+      <div class="right-briefing-column">
+        <div class="briefing-card">
+          
+          <!-- 유리나 프로필 헤더 -->
+          <div class="yurina-profile-row">
+            <div class="avatar-wrapper">
+              <img src="icons/yurina-avatar.png" alt="유리나" class="avatar-img" />
             </div>
-            <span class="yurina-status-text" id="yurinaStatus">실시간 해상 관제 브리핑 ✨</span>
+            <div class="yurina-meta">
+              <div class="yurina-name-box">
+                <span class="yurina-name">유리나</span>
+                <span class="yurina-role-badge">AI 전담 비서</span>
+              </div>
+              <span class="yurina-status-text" id="yurinaStatus">실시간 해상 관제 브리핑 ✨</span>
+            </div>
           </div>
-        </div>
 
-        <!-- 진수 님이 지정하신 브리핑 순서 말풍선 스트림 -->
-        <!-- 1. 위치 -> 2. 속도/침로 -> 3. 화물/흘수 -> 4. 도착예정일(ETA) -> 5. 중흥부두 접안/통항 조건 -->
-        <div class="chat-bubble-stream" id="chatBubbleStream">
-          <!-- 동적 말풍선 삽입 -->
-        </div>
+          <!-- 진수 님이 지정하신 브리핑 순서 말풍선 스트림 -->
+          <!-- 1. 위치 -> 2. 속도/침로 -> 3. 화물/흘수 -> 4. 도착예정일(ETA) -> 5. 중흥부두 접안/통항 조건 -->
+          <div class="chat-bubble-stream" id="chatBubbleStream">
+            <!-- 동적 말풍선 삽입 -->
+          </div>
 
-        <!-- 핵심 4대 지표 요약 카드 -->
-        <div class="metrics-grid">
-          <div class="metric-card">
-            <span class="lbl">현재 속력</span>
-            <span class="val" id="metricSpeed">6.2 kn</span>
-          </div>
-          <div class="metric-card">
-            <span class="lbl">침로</span>
-            <span class="val" id="metricCourse">004° NNE</span>
-          </div>
-          <div class="metric-card">
-            <span class="lbl">현재 흘수</span>
-            <span class="val" id="metricDraught" style="color:var(--accent-amber);">6.4 m</span>
-          </div>
-          <div class="metric-card">
-            <span class="lbl">남은 거리</span>
-            <span class="val" id="metricDistance">~315 nm</span>
-          </div>
         </div>
-
-        <!-- 항해 진행 바 -->
-        <div class="progress-box">
-          <div class="ports-row">
-            <span id="routeOriginText">대만 안핑항 (11/07 출항)</span>
-            <span id="routeDestText">여수 중흥부두 (진행 64%)</span>
-          </div>
-          <div class="bar-bg">
-            <div class="bar-fill" id="routeProgressBar"></div>
-          </div>
-        </div>
-
       </div>
-    </section>
+
+    </main>
 
   </div>
 
@@ -558,23 +386,13 @@
         id: "sunrise-sambu",
         name: "SUNRISE SAMBU",
         imo: "9288007",
-        coord: "29.3373° N, 123.2278° E",
         lat: 29.3373,
         lon: 123.2278,
-        speed: "6.2 kn",
-        course: "004° NNE",
-        draught: "6.4 m",
-        eta: "오늘 20:00 KST",
         progress: 64,
-        distanceNm: "~315 nm",
-        origin: "대만 안핑항",
-        destination: "여수 중흥부두",
-        topPercent: "50%",
-        leftPercent: "54%",
         briefingSequence: [
           {
             tag: "📍 1. 현재 위치",
-            text: "진수 님! 지금 <b>SUNRISE SAMBU</b>호는 <span class='highlight-cyan'>북위 29.3373° N, 동경 123.2278° E</span> (동중국해 해상)를 통과 중이에요. 중국 저우산 남동쪽 약 133km 부근입니다 🚢"
+            text: "진수 님! 지금 <b>SUNRISE SAMBU</b>호는 <span class='highlight-cyan'>북위 29.34°N, 동경 123.23°E</span> (동중국해 해상)를 통과 중이에요. 중국 저우산 남동쪽 약 133km 부근입니다 🚢"
           },
           {
             tag: "⚡ 2. 현재 속도 및 침로",
@@ -598,19 +416,9 @@
         id: "grace-sambu",
         name: "GRACE SAMBU",
         imo: "9288019",
-        coord: "34.8210° N, 127.7540° E",
         lat: 34.8210,
         lon: 127.7540,
-        speed: "0.0 kn",
-        course: "정박 중 (Moored)",
-        draught: "5.1 m",
-        eta: "접안 완료 (하역 중)",
         progress: 100,
-        distanceNm: "0 nm",
-        origin: "울산 석화부두",
-        destination: "여수 석화부두",
-        topPercent: "16%",
-        leftPercent: "73%",
         briefingSequence: [
           {
             tag: "📍 1. 현재 위치",
@@ -626,7 +434,7 @@
           },
           {
             tag: "⏱️ 4. 일정 현황",
-            text: "현재 선석 하역이 정상 진행 중이며, 하역 완료 후 출항(ETD) 일정이 업데이트되면 바로 챙겨드릴게요!"
+            text: "현재 선석 하역이 순조롭게 진행 중이며, 하역 완료 후 출항(ETD) 일정이 업데이트되면 바로 챙겨드릴게요!"
           }
         ]
       }
@@ -635,29 +443,9 @@
     let currentVessel = fleetData[0];
 
     function updateView() {
-      // 1. 헤더 & 좌표 태그
-      document.getElementById('mapCoordTag').textContent = currentVessel.coord;
-      document.getElementById('radarShipLabel').textContent = `${currentVessel.name} · ${currentVessel.speed}`;
-      
-      // 레이더 마커 위치
-      const blipBox = document.getElementById('radarBlipBox');
-      blipBox.style.top = currentVessel.topPercent;
-      blipBox.style.left = currentVessel.leftPercent;
-
       // 외부 링크 업데이트
       document.getElementById('btnGmaps').href = `https://www.google.com/maps?q=${currentVessel.lat},${currentVessel.lon}&z=6`;
       document.getElementById('btnVf').href = `https://www.vesselfinder.com/vessels/details/${currentVessel.imo}`;
-
-      // 지표 카드
-      document.getElementById('metricSpeed').textContent = currentVessel.speed;
-      document.getElementById('metricCourse').textContent = currentVessel.course;
-      document.getElementById('metricDraught').textContent = currentVessel.draught;
-      document.getElementById('metricDistance').textContent = currentVessel.distanceNm;
-
-      // 진행 바
-      document.getElementById('routeOriginText').textContent = currentVessel.origin + " 출항";
-      document.getElementById('routeDestText').textContent = `${currentVessel.destination} (진행 ${currentVessel.progress}%)`;
-      document.getElementById('routeProgressBar').style.width = `${currentVessel.progress}%`;
 
       // 말풍선 스트림 렌더링
       renderBubbles();
