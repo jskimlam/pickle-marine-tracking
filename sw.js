@@ -1,10 +1,12 @@
-const CACHE_NAME = 'pickle-marine-tracking-v1';
+const CACHE_NAME = 'pickle-marine-tracking-v2';
 const ASSETS = [
   './',
   './index.html',
   './manifest.json',
   './icons/icon-192.png',
-  './icons/icon-512.png'
+  './icons/icon-512.png',
+  './icons/yurina-avatar.png',
+  './images/route-map.png'
 ];
 
 self.addEventListener('install', (e) => {
