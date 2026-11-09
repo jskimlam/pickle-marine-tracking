@@ -1,0 +1,24 @@
+{
+  "name": "피클마린트래킹",
+  "short_name": "마린트래킹",
+  "description": "동중국해 및 연안 케미칼·원료 운반선 실시간 해상 관제 시스템",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0b0e14",
+  "theme_color": "#0b0e14",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

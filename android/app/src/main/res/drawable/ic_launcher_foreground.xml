@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp"
+    android:viewportWidth="108" android:viewportHeight="108">
+    <!-- Outer Card Frame in Champagne Gold -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#D4AF37"
+        android:strokeWidth="3.5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M26,30 L82,30 A6,6 0 0,1 88,36 L88,72 A6,6 0 0,1 82,78 L26,78 A6,6 0 0,1 20,72 L20,36 A6,6 0 0,1 26,30 Z"/>
+    
+    <!-- Chip / Emblem -->
+    <path
+        android:fillColor="#D4AF37"
+        android:pathData="M30,42 L46,42 A2,2 0 0,1 48,44 L48,54 A2,2 0 0,1 46,56 L30,56 A2,2 0 0,1 28,54 L28,44 A2,2 0 0,1 30,42 Z"/>
+    
+    <!-- Executive Card Lines -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#E6C875"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round"
+        android:pathData="M56,45 L78,45"/>
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#A88B32"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:pathData="M56,53 L72,53"/>
+    
+    <!-- Bottom Brand Accent -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#D4AF37"
+        android:strokeWidth="1.8"
+        android:strokeLineCap="round"
+        android:pathData="M28,68 L50,68"/>
+    
+    <!-- Corner Diamond Accent -->
+    <path
+        android:fillColor="#F5E4A8"
+        android:pathData="M78,65 L81,68 L78,71 L75,68 Z"/>
+</vector>
