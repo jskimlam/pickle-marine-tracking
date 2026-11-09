@@ -245,6 +245,18 @@
         grid-template-columns: 1.15fr 1fr;
         align-items: start;
       }
+      /* 폴드8 펼침 대화면: 좌측 지도는 화면에 항상 고정(Sticky), 우측 말풍선만 스크롤! */
+      .left-map-column {
+        position: sticky;
+        top: 112px;
+        align-self: start;
+        z-index: 10;
+      }
+      .map-frame {
+        height: calc(100vh - 180px);
+        min-height: 440px;
+        max-height: 640px;
+      }
     }
 
     /* ------------------------------------------------------------ */
@@ -1166,6 +1178,10 @@
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('sw.js').catch(err => console.log(err));
     }
+
+    window.addEventListener('resize', () => {
+      if (map) map.invalidateSize();
+    });
 
     initMap();
     renderChips();
