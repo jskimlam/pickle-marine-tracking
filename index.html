@@ -27,6 +27,7 @@
       --accent-green: #10b981;
       --accent-amber: #f59e0b;
       --accent-lilac: #c084fc;
+      --accent-red: #ef4444;
       --bubble-bg: #1e2638;
       --bubble-border: #2d3852;
       --radius-card: 16px;
@@ -177,14 +178,14 @@
       background: var(--bg-card);
       border: 1px solid var(--border-line);
       border-radius: var(--radius-pill);
-      padding: 6px 13px;
+      padding: 5px 8px 5px 12px;
       font-size: 12px;
       font-weight: 700;
       color: var(--text-sub);
       cursor: pointer;
       display: inline-flex;
       align-items: center;
-      gap: 5px;
+      gap: 6px;
       white-space: nowrap;
       transition: all 0.2s ease;
     }
@@ -193,6 +194,34 @@
       border-color: var(--accent-cyan);
       color: #fff;
       box-shadow: 0 0 12px rgba(6, 182, 212, 0.3);
+    }
+    .chip-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .chip-delete-btn {
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: var(--text-mute);
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      font-size: 12px;
+      line-height: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .chip-delete-btn:hover {
+      background: rgba(239, 68, 68, 0.4);
+      color: #fff;
+    }
+    .chip.active .chip-delete-btn {
+      background: rgba(255, 255, 255, 0.25);
+      color: #fff;
     }
 
     /* ============================================================ */
@@ -378,6 +407,7 @@
       100% { transform: translateY(0px) scale(1); }
     }
     .yurina-meta {
+      flex: 1;
       display: flex;
       flex-direction: column;
       gap: 3px;
@@ -404,6 +434,26 @@
     .yurina-status-text {
       font-size: 12px;
       color: var(--text-sub);
+    }
+
+    /* 관제 종료(삭제) 버튼 */
+    .btn-close-vessel {
+      background: rgba(239, 68, 68, 0.12);
+      border: 1px solid rgba(239, 68, 68, 0.35);
+      color: #fca5a5;
+      border-radius: var(--radius-pill);
+      padding: 5px 11px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.2s ease;
+    }
+    .btn-close-vessel:hover {
+      background: rgba(239, 68, 68, 0.25);
+      color: #fff;
     }
 
     /* 브리핑 말풍선 스트림 (위치 -> 속도 -> 화물/흘수 -> ETA -> 접안 순서) */
@@ -444,6 +494,28 @@
     .highlight-cyan { color: var(--accent-cyan); font-weight: 700; }
     .highlight-amber { color: var(--accent-amber); font-weight: 700; }
     .highlight-blue { color: var(--accent-blue); font-weight: 700; }
+
+    /* 빈 화면 안내 */
+    .empty-state-box {
+      text-align: center;
+      padding: 40px 16px;
+      color: var(--text-sub);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+    .btn-restore-fleet {
+      background: var(--bg-card);
+      border: 1px solid var(--border-line);
+      color: var(--accent-cyan);
+      border-radius: var(--radius-pill);
+      padding: 6px 14px;
+      font-size: 11.5px;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 8px;
+    }
   </style>
 </head>
 <body>
@@ -467,11 +539,11 @@
       <div class="search-row">
         <div class="search-box">
           <span>🔍</span>
-          <input type="text" id="shipSearchInput" placeholder="선박명 또는 IMO 번호 검색 (엔터로 즉시 조회)" />
+          <input type="text" id="shipSearchInput" placeholder="선박명 또는 IMO 번호 검색 (예: SUNRISE SAMBU, TN IDUN)" />
           <button class="btn-search-go" id="btnSearchGo">조회</button>
         </div>
         <div class="fleet-chips" id="fleetChipsContainer">
-          <!-- 동적 칩 목록 -->
+          <!-- 동적 칩 목록 (삭제 x 버튼 포함) -->
         </div>
       </div>
     </header>
@@ -499,7 +571,7 @@
       <div class="right-briefing-column">
         <div class="briefing-card">
           
-          <!-- 유리나 프로필 헤더 -->
+          <!-- 유리나 프로필 헤더 & 관제 종료 버튼 -->
           <div class="yurina-profile-row">
             <div class="avatar-wrapper">
               <img src="icons/yurina-avatar.png" alt="유리나" class="avatar-img" />
@@ -511,6 +583,9 @@
               </div>
               <span class="yurina-status-text" id="yurinaStatus">실시간 해상 관제 브리핑 ✨</span>
             </div>
+            <button class="btn-close-vessel" id="btnCloseVessel" title="도착 완료 또는 목록에서 삭제">
+              🗑️ 관제 종료
+            </button>
           </div>
 
           <!-- 진수 님이 지정하신 브리핑 순서 말풍선 스트림 -->
@@ -527,8 +602,8 @@
   </div>
 
   <script>
-    // 석유화학 수송 선박 데이터베이스
-    const fleetData = [
+    // 기본 선박 데이터베이스 원본
+    const defaultFleet = [
       {
         id: "pacific-sambu",
         name: "PACIFIC SAMBU",
@@ -656,43 +731,31 @@
             text: "낙포부두 석화 선석 하역 완료 시 묘도수로 통항 허가 확인 후 출항 예정입니다."
           }
         ]
-      },
-      {
-        id: "woory-sambu",
-        name: "WOORY SAMBU",
-        imo: "9288021",
-        lat: 31.8500,
-        lon: 124.9500,
-        zoom: 6,
-        origin: { name: "대만 가오슝", lat: 22.6100, lon: 120.2800 },
-        dest: { name: "대산 롯데부두", lat: 37.0120, lon: 126.4100 },
-        briefingSequence: [
-          {
-            tag: "📍 1. 현재 위치",
-            text: "<b>WOORY SAMBU</b>호는 <span class='highlight-cyan'>북위 31.8500° N, 동경 124.9500° E</span> (제주 서남방 210km) 해상을 통과 중입니다."
-          },
-          {
-            tag: "⚡ 2. 현재 속도 및 침로",
-            text: "현재 속력은 <span class='highlight-cyan'>9.8노트</span>, 침로는 <span class='highlight-blue'>032° NNE</span>로 서해안 대산항 방면으로 북상하고 있어요."
-          },
-          {
-            tag: "📦 3. 화물 및 흘수 상태",
-            text: "프로필렌 및 석유화학 가스/원료 수송 중이며 현재 흘수는 <span class='highlight-amber'>5.8m</span>입니다."
-          },
-          {
-            tag: "⏱️ 4. 도착 예정일 (ETA)",
-            text: "대산 롯데 대산부두 도착 예정 시간은 <span class='highlight-amber'>내일 11/11(수) 07:30 KST</span>입니다."
-          },
-          {
-            tag: "⚠️ 5. 대산부두 통항 조건",
-            text: "대산항 항로 조류 주의 및 도선사 승선 일정 체크 중입니다."
-          }
-        ]
       }
     ];
 
+    // 로컬스토리지에서 사용자 커스텀 선박 목록 불러오기
+    let fleetData = [];
+    try {
+      const stored = localStorage.getItem('pickle_fleet_data_v2');
+      if (stored) {
+        fleetData = JSON.parse(stored);
+      }
+    } catch (e) {}
+
+    if (!fleetData || fleetData.length === 0) {
+      fleetData = JSON.parse(JSON.stringify(defaultFleet));
+      saveFleet();
+    }
+
+    function saveFleet() {
+      try {
+        localStorage.setItem('pickle_fleet_data_v2', JSON.stringify(fleetData));
+      } catch (e) {}
+    }
+
     // 저장된 선박 복원
-    let currentVessel = fleetData[0];
+    let currentVessel = fleetData[0] || null;
     const savedId = localStorage.getItem('pickle_selected_vessel');
     if (savedId) {
       const match = fleetData.find(v => v.id === savedId);
@@ -704,12 +767,15 @@
     let routeLayerGroup = null;
 
     function initMap() {
+      const initLat = currentVessel ? currentVessel.lat : 34.0;
+      const initLon = currentVessel ? currentVessel.lon : 126.5;
+      const initZoom = currentVessel ? (currentVessel.zoom || 6) : 6;
+
       map = L.map('map', {
         zoomControl: true,
         attributionControl: false
-      }).setView([currentVessel.lat, currentVessel.lon], currentVessel.zoom || 6);
+      }).setView([initLat, initLon], initZoom);
 
-      // OpenStreetMap 타일 (API 키 없음, 전세계 바다/육지 완벽 렌더링)
       L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 18
       }).addTo(map);
@@ -718,6 +784,11 @@
     }
 
     function updateView() {
+      if (!currentVessel) {
+        renderEmptyState();
+        return;
+      }
+
       // 선택 선박 로컬스토리지 영구 보관 (새로고침해도 유지!)
       localStorage.setItem('pickle_selected_vessel', currentVessel.id);
 
@@ -741,7 +812,7 @@
     }
 
     function renderMapForVessel() {
-      if (!map || !routeLayerGroup) return;
+      if (!map || !routeLayerGroup || !currentVessel) return;
 
       routeLayerGroup.clearLayers();
 
@@ -749,7 +820,6 @@
       const vLon = currentVessel.lon;
       const zoom = currentVessel.zoom || 6;
 
-      // 지도 부드럽게 이동
       map.flyTo([vLat, vLon], zoom, { duration: 0.8 });
 
       // 출항지 / 목적지 연결선 및 마커
@@ -791,7 +861,7 @@
         L.marker([dLat, dLon], { icon: destIcon }).addTo(routeLayerGroup);
       }
 
-      // 선박 현재 위치 커스텀 마커 (원형 펄스 + 배 아이콘 + 선박명 태그)
+      // 선박 현재 위치 커스텀 마커
       const vesselIcon = L.divIcon({
         className: 'vessel-marker-pin',
         html: `
@@ -807,6 +877,8 @@
     function renderBubbles() {
       const container = document.getElementById('chatBubbleStream');
       container.innerHTML = '';
+
+      if (!currentVessel) return;
 
       currentVessel.briefingSequence.forEach(bItem => {
         const itemEl = document.createElement('div');
@@ -826,22 +898,96 @@
       });
     }
 
+    function renderEmptyState() {
+      if (routeLayerGroup) routeLayerGroup.clearLayers();
+      document.getElementById('mapTagOverlay').textContent = `관제 대기 중`;
+      document.getElementById('yurinaStatus').textContent = `관제 중인 선박이 없습니다`;
+
+      const container = document.getElementById('chatBubbleStream');
+      container.innerHTML = `
+        <div class="empty-state-box">
+          <div style="font-size:32px;">⚓</div>
+          <div><b>현재 관제 중인 선박이 모두 정리되었습니다!</b></div>
+          <div style="font-size:12.5px;">상단 검색창에서 배 이름이나 IMO 번호를 검색하여 새 선박을 추가해 주세요.</div>
+          <button class="btn-restore-fleet" id="btnRestoreFleet">🔄 기본 선박 목록 복원하기</button>
+        </div>
+      `;
+
+      document.getElementById('btnRestoreFleet').addEventListener('click', () => {
+        fleetData = JSON.parse(JSON.stringify(defaultFleet));
+        saveFleet();
+        currentVessel = fleetData[0];
+        renderChips();
+        updateView();
+      });
+    }
+
+    // 선박 칩 렌더링 (각 칩에 × 삭제 버튼 부착!)
     function renderChips() {
       const chipContainer = document.getElementById('fleetChipsContainer');
       chipContainer.innerHTML = '';
 
-      fleetData.forEach(v => {
+      fleetData.forEach((v, idx) => {
         const chip = document.createElement('div');
-        chip.className = `chip ${v.id === currentVessel.id ? 'active' : ''}`;
-        chip.innerHTML = `🚢 ${v.name}`;
-        chip.addEventListener('click', () => {
+        chip.className = `chip ${currentVessel && v.id === currentVessel.id ? 'active' : ''}`;
+
+        const label = document.createElement('span');
+        label.className = 'chip-label';
+        label.innerHTML = `🚢 ${v.name}`;
+        label.addEventListener('click', () => {
           currentVessel = v;
           renderChips();
           updateView();
         });
+
+        // 개별 선박 삭제(종료) 버튼 ×
+        const delBtn = document.createElement('button');
+        delBtn.className = 'chip-delete-btn';
+        delBtn.innerHTML = '×';
+        delBtn.title = `${v.name} 관제 종료 및 삭제`;
+        delBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          deleteVessel(v.id);
+        });
+
+        chip.appendChild(label);
+        chip.appendChild(delBtn);
         chipContainer.appendChild(chip);
       });
     }
+
+    // 선박 삭제(종료) 처리 함수
+    function deleteVessel(idToDelete) {
+      const target = fleetData.find(v => v.id === idToDelete);
+      const targetName = target ? target.name : "선박";
+
+      fleetData = fleetData.filter(v => v.id !== idToDelete);
+      saveFleet();
+
+      // 만약 현재 보던 배를 삭제한 경우, 남은 선박 중 첫 번째로 전환
+      if (currentVessel && currentVessel.id === idToDelete) {
+        currentVessel = fleetData.length > 0 ? fleetData[0] : null;
+      }
+
+      renderChips();
+      updateView();
+
+      const status = document.getElementById('yurinaStatus');
+      if (status) {
+        status.textContent = `${targetName}호 관제가 종료되었습니다 ✅`;
+        setTimeout(() => {
+          if (currentVessel) {
+            status.textContent = `${currentVessel.name} 실시간 관제 브리핑 중 ✨`;
+          }
+        }, 2200);
+      }
+    }
+
+    // 우측 상단 [🗑️ 관제 종료] 버튼 이벤트
+    document.getElementById('btnCloseVessel').addEventListener('click', () => {
+      if (!currentVessel) return;
+      deleteVessel(currentVessel.id);
+    });
 
     // 선박 검색 실행 로직
     function executeSearch() {
@@ -888,12 +1034,14 @@
             }
           ]
         };
-        fleetData.push(newVessel);
+        fleetData.unshift(newVessel);
+        saveFleet();
         currentVessel = newVessel;
       }
 
       renderChips();
       updateView();
+      input.value = '';
       input.blur();
     }
 
@@ -905,8 +1053,9 @@
     });
     document.getElementById('btnSearchGo').addEventListener('click', executeSearch);
 
-    // [최신 갱신] 버튼: 페이지를 리셋하지 않고 현재 선택한 선박의 위치를 재동기화!
+    // [최신 갱신] 버튼
     document.getElementById('btnRefresh').addEventListener('click', () => {
+      if (!currentVessel) return;
       const status = document.getElementById('yurinaStatus');
       status.textContent = `${currentVessel.name} 실시간 AIS 재동기화 중... ⏳`;
       setTimeout(() => {
