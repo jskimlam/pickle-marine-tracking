@@ -573,7 +573,10 @@
       }
     });
 
-    // PWA 서비스 워커 등록
+    // PWA 서비스 워커 및 구버전 캐시 완전 초기화
+    if ('caches' in window) {
+      caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k))));
+    }
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('sw.js').catch(err => console.log(err));
     }
