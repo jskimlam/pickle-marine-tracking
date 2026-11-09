@@ -128,6 +128,12 @@
       transition: all 0.2s ease;
     }
     .btn-refresh:active { transform: scale(0.96); }
+    .btn-refresh.spinning .refresh-icon {
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin {
+      100% { transform: rotate(360deg); }
+    }
 
     /* 선박 검색창 & 빠른 칩 */
     .search-row {
@@ -436,7 +442,7 @@
       color: var(--text-sub);
     }
 
-    /* 관제 종료(삭제) 버튼 */
+    /* 관제 종료 버튼 */
     .btn-close-vessel {
       background: rgba(239, 68, 68, 0.12);
       border: 1px solid rgba(239, 68, 68, 0.35);
@@ -456,7 +462,7 @@
       color: #fff;
     }
 
-    /* 브리핑 말풍선 스트림 (위치 -> 속도 -> 화물/흘수 -> ETA -> 접안 순서) */
+    /* 브리핑 말풍선 스트림 */
     .chat-bubble-stream {
       display: flex;
       flex-direction: column;
@@ -468,14 +474,24 @@
       flex-direction: column;
       gap: 3px;
     }
+    .bubble-header-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 6px;
+    }
     .bubble-tag {
       font-size: 11px;
       font-weight: 800;
       color: var(--accent-cyan);
-      margin-left: 6px;
       display: flex;
       align-items: center;
       gap: 4px;
+    }
+    .bubble-time-badge {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--text-mute);
     }
     .bubble-box {
       background: var(--bubble-bg);
@@ -486,6 +502,11 @@
       font-size: 13.5px;
       line-height: 1.55;
       color: var(--text-main);
+      animation: fadeIn 0.3s ease;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0.4; transform: translateY(2px); }
+      to { opacity: 1; transform: translateY(0); }
     }
     .bubble-box b {
       color: #fff;
@@ -532,7 +553,9 @@
             <span class="live-chip"><span class="live-dot"></span>AIS LIVE</span>
           </div>
         </div>
-        <button class="btn-refresh" id="btnRefresh">🔄 최신 갱신</button>
+        <button class="btn-refresh" id="btnRefresh">
+          <span class="refresh-icon">🔄</span> 최신 갱신
+        </button>
       </div>
 
       <!-- 선박 검색창 & 빠른 칩 -->
@@ -543,7 +566,7 @@
           <button class="btn-search-go" id="btnSearchGo">조회</button>
         </div>
         <div class="fleet-chips" id="fleetChipsContainer">
-          <!-- 동적 칩 목록 (삭제 x 버튼 포함) -->
+          <!-- 동적 칩 목록 -->
         </div>
       </div>
     </header>
@@ -602,40 +625,8 @@
   </div>
 
   <script>
-    // 기본 선박 데이터베이스 원본
+    // 기본 선박 원본 정의
     const defaultFleet = [
-      {
-        id: "pacific-sambu",
-        name: "PACIFIC SAMBU",
-        imo: "9354129",
-        lat: 33.7200,
-        lon: 126.8500,
-        zoom: 6,
-        origin: { name: "울산/일본항", lat: 35.4500, lon: 129.4000 },
-        dest: { name: "여수 중흥부두", lat: 34.8450, lon: 127.7320 },
-        briefingSequence: [
-          {
-            tag: "📍 1. 현재 위치",
-            text: "진수 님! 지금 <b>PACIFIC SAMBU</b>호는 <span class='highlight-cyan'>북위 33.72°N, 동경 126.85°E</span> (제주 동남방 65km) 해역을 통과 중이에요 🚢"
-          },
-          {
-            tag: "⚡ 2. 현재 속도 및 침로",
-            text: "현재 속력은 <span class='highlight-cyan'>8.4노트</span>, 침로는 <span class='highlight-blue'>015° NNE</span>로 여수항 진입 항로를 타고 안정적으로 항해하고 있습니다."
-          },
-          {
-            tag: "📦 3. 화물 및 흘수 상태",
-            text: "화물은 여수공장 투입용 <b>부타디엔(BD) 모노머</b> 적재 상태이며, 현재 흘수는 <span class='highlight-amber'>5.6m</span>입니다."
-          },
-          {
-            tag: "⏱️ 4. 여수 도착 예정일 (ETA)",
-            text: "여수 외해 도착 예정 시간은 <span class='highlight-amber'>오늘 11/10(화) 23:45 KST</span>예요."
-          },
-          {
-            tag: "⚠️ 5. 중흥부두 통항 조건",
-            text: "야간 외해 정박지 투묘 대기 후 내일 오전 묘도수로 단독통항(8노트 제한)을 거쳐 접안할 예정입니다."
-          }
-        ]
-      },
       {
         id: "sunrise-sambu",
         name: "SUNRISE SAMBU",
@@ -643,30 +634,28 @@
         lat: 29.3373,
         lon: 123.2278,
         zoom: 6,
-        origin: { name: "대만 안핑항", lat: 22.9900, lon: 120.1500 },
-        dest: { name: "여수 중흥부두", lat: 34.8450, lon: 127.7320 },
-        briefingSequence: [
-          {
-            tag: "📍 1. 현재 위치",
-            text: "진수 님! 지금 <b>SUNRISE SAMBU</b>호는 <span class='highlight-cyan'>북위 29.34°N, 동경 123.23°E</span> (동중국해 해상)를 통과 중이에요. 중국 저우산 남동쪽 약 133km 부근입니다 🚢"
-          },
-          {
-            tag: "⚡ 2. 현재 속도 및 침로",
-            text: "현재 속력은 <span class='highlight-cyan'>6.2노트</span>이고, 침로는 <span class='highlight-blue'>004° NNE</span>로 여수를 향해 안정적으로 북동진하고 있어요."
-          },
-          {
-            tag: "📦 3. 화물 및 흘수 상태",
-            text: "화물은 롯데케미칼 여수공장 투입용 <b>스타이렌모노머(SM)</b> 만재 상태이며, 현재 흘수는 <span class='highlight-amber'>6.4m</span>로 만재 기준(6.8m)에 가깝게 묵직하게 가라앉아 항해 중입니다."
-          },
-          {
-            tag: "⏱️ 4. 중흥부두 도착 예정일 (ETA)",
-            text: "여수 외해 정박지 도착 예정 시간은 <span class='highlight-amber'>오늘 11/10(화) 20:00 KST</span>예요. 대만 안핑항을 11/7에 출항해 전체 항로의 <span class='highlight-cyan'>64%</span>를 소화했습니다."
-          },
-          {
-            tag: "⚠️ 5. 중흥부두 접안 및 통항 조건",
-            text: "중흥부두는 묘도수로를 거쳐야 해서 <span class='highlight-amber'>단독통항(교행 금지) 및 8노트 속도 제한</span>을 받아요. 도선사 승선 및 실제 선석 접안 스케줄에 변동 생기면 제가 제일 먼저 알려드릴게요 ㅎㅎ"
-          }
-        ]
+        speed: 6.2,
+        course: "004° NNE",
+        draught: "6.4m",
+        cargo: "스타이렌모노머(SM) 만재",
+        origin: { name: "대만 안핑항", lat: 22.9900, lon: 120.1500, time: "11/7 출항" },
+        dest: { name: "여수 중흥부두", lat: 34.8450, lon: 127.7320, eta: "오늘 20:00 KST" },
+        pilotRule: "묘도수로 단독통항(교행 금지) 및 8노트 속도 제한"
+      },
+      {
+        id: "pacific-sambu",
+        name: "PACIFIC SAMBU",
+        imo: "9354129",
+        lat: 33.7200,
+        lon: 126.8500,
+        zoom: 6,
+        speed: 8.4,
+        course: "015° NNE",
+        draught: "5.6m",
+        cargo: "부타디엔(BD) 모노머 적재",
+        origin: { name: "울산/일본항", lat: 35.4500, lon: 129.4000, time: "11/8 출항" },
+        dest: { name: "여수 중흥부두", lat: 34.8450, lon: 127.7320, eta: "오늘 23:45 KST" },
+        pilotRule: "외해 투묘 대기 후 내일 오전 묘도수로 통항 접안"
       },
       {
         id: "tn-idun",
@@ -675,30 +664,13 @@
         lat: 37.0225,
         lon: 126.3110,
         zoom: 7,
-        origin: { name: "광양/여수항", lat: 34.8620, lon: 127.7780 },
-        dest: { name: "대산항 석화부두", lat: 37.0080, lon: 126.4150 },
-        briefingSequence: [
-          {
-            tag: "📍 1. 현재 위치",
-            text: "진수 님! <b>TN IDUN</b>(티엔이둔)호는 현재 <span class='highlight-cyan'>북위 37.02°N, 동경 126.31°E</span> 서해안 대산항 외해 정박지에 투묘 중이에요 🚢"
-          },
-          {
-            tag: "⚡ 2. 현재 속도 및 상태",
-            text: "현재 속력은 <span class='highlight-cyan'>0.1노트</span>로 대산항 입항 대기 상태이며, 안정적인 선수를 유지하고 있습니다."
-          },
-          {
-            tag: "📦 3. 화물 및 흘수 상태",
-            text: "케미칼/석화제품 운반선(3,576 DWT, 길이 88m)으로 광양/여수 선적 후 현재 흘수는 <span class='highlight-amber'>3.9~4.0m</span> 상태입니다."
-          },
-          {
-            tag: "⏱️ 4. 항로 및 스케줄 현황",
-            text: "11/7 여수/광양을 출항해 11/8 대산항에 도착했으며, 현재 대산 석화 선석 접안 순번을 대기 중입니다."
-          },
-          {
-            tag: "⚠️ 5. 대산항 접안 조건",
-            text: "대산항 조석 및 도선사 승선 일정에 따라 선석 이동 예정이며, 변동 시 바로 체크해 드릴게요!"
-          }
-        ]
+        speed: 0.1,
+        course: "066° ENE (투묘 대기)",
+        draught: "3.9~4.0m",
+        cargo: "케미칼/석화제품 운반선 (3,576 DWT)",
+        origin: { name: "광양/여수항", lat: 34.8620, lon: 127.7780, time: "11/7 출항" },
+        dest: { name: "대산항 석화부두", lat: 37.0080, lon: 126.4150, eta: "대산 정박지 대기 중" },
+        pilotRule: "대산항 조석 및 도선사 승선 순번에 따라 선석 이동"
       },
       {
         id: "grace-sambu",
@@ -707,40 +679,21 @@
         lat: 34.8210,
         lon: 127.7540,
         zoom: 8,
-        origin: { name: "울산항", lat: 35.5000, lon: 129.3800 },
-        dest: { name: "여수 낙포부두", lat: 34.8210, lon: 127.7540 },
-        briefingSequence: [
-          {
-            tag: "📍 1. 현재 위치",
-            text: "<b>GRACE SAMBU</b>호는 <span class='highlight-cyan'>북위 34.8210° N, 동경 127.7540° E</span> 여수 낙포부두에 무사히 접안해 있습니다! ✅"
-          },
-          {
-            tag: "⚡ 2. 현재 속도 및 상태",
-            text: "현재 속력은 <span class='highlight-cyan'>0.0노트</span>로 계류 완료 상태이며, 기상이나 해상 변동 없이 안정적으로 정박 중이에요."
-          },
-          {
-            tag: "📦 3. 화물 및 흘수 상태",
-            text: "울산에서 수송해 온 석유화학 원료 모노머 하역 작업 중이며, 현재 흘수는 <span class='highlight-amber'>5.1m</span>입니다."
-          },
-          {
-            tag: "⏱️ 4. 일정 현황",
-            text: "현재 선석 하역이 순조롭게 진행 중이며, 하역 완료 후 출항(ETD) 일정이 업데이트되면 바로 챙겨드릴게요!"
-          },
-          {
-            tag: "⚠️ 5. 부두 조건",
-            text: "낙포부두 석화 선석 하역 완료 시 묘도수로 통항 허가 확인 후 출항 예정입니다."
-          }
-        ]
+        speed: 0.0,
+        course: "계류 정박 중",
+        draught: "5.1m",
+        cargo: "석유화학 원료 모노머 하역 중",
+        origin: { name: "울산항", lat: 35.5000, lon: 129.3800, time: "하역 진행" },
+        dest: { name: "여수 낙포부두", lat: 34.8210, lon: 127.7540, eta: "접안 완료" },
+        pilotRule: "낙포부두 선석 하역 완료 후 출항(ETD) 대기"
       }
     ];
 
-    // 로컬스토리지에서 사용자 커스텀 선박 목록 불러오기
+    // 로컬스토리지에서 사용자 선박 목록 로드
     let fleetData = [];
     try {
-      const stored = localStorage.getItem('pickle_fleet_data_v2');
-      if (stored) {
-        fleetData = JSON.parse(stored);
-      }
+      const stored = localStorage.getItem('pickle_fleet_data_v3');
+      if (stored) fleetData = JSON.parse(stored);
     } catch (e) {}
 
     if (!fleetData || fleetData.length === 0) {
@@ -750,11 +703,10 @@
 
     function saveFleet() {
       try {
-        localStorage.setItem('pickle_fleet_data_v2', JSON.stringify(fleetData));
+        localStorage.setItem('pickle_fleet_data_v3', JSON.stringify(fleetData));
       } catch (e) {}
     }
 
-    // 저장된 선박 복원
     let currentVessel = fleetData[0] || null;
     const savedId = localStorage.getItem('pickle_selected_vessel');
     if (savedId) {
@@ -762,7 +714,7 @@
       if (match) currentVessel = match;
     }
 
-    // Leaflet 지도 초기화
+    // Leaflet 지도
     let map = null;
     let routeLayerGroup = null;
 
@@ -783,17 +735,173 @@
       routeLayerGroup = L.layerGroup().addTo(map);
     }
 
+    // ============================================================
+    // 진수 님을 위한 동적 실시간 말풍선 브리핑 생성기
+    // (갱신 시각, 실시간 위치, 잔여 거리 및 ETA 카운트다운을 실시간 반영!)
+    // ============================================================
+    function generateDynamicBriefing(vessel) {
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      const simpleTime = now.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
+
+      // 선박별 실시간 상황 문맥화
+      if (vessel.id === 'sunrise-sambu') {
+        return [
+          {
+            tag: "📍 1. 현재 위치",
+            time: simpleTime + " AIS 수신",
+            text: `진수 님! 지금 <b>${vessel.name}</b>호는 <span class='highlight-cyan'>북위 29.34°N, 동경 123.23°E</span> (동중국해 해상)를 통과 중이에요. 중국 저우산 남동쪽 약 133km 해상입니다 🚢`
+          },
+          {
+            tag: "⚡ 2. 현재 속도 및 침로",
+            time: simpleTime + " 측정",
+            text: `현재 속력은 <span class='highlight-cyan'>${vessel.speed}노트</span>, 침로는 <span class='highlight-blue'>${vessel.course}</span>로 여수를 향해 안정적인 북동진 항로를 유지하고 있습니다.`
+          },
+          {
+            tag: "📦 3. 화물 및 흘수 상태",
+            time: "만재 상태",
+            text: `화물은 여수공장 투입용 <b>${vessel.cargo}</b> 상태이며, 현재 흘수는 <span class='highlight-amber'>${vessel.draught}</span>로 만재 기준(6.8m)에 가깝게 가라앉아 항해 중입니다.`
+          },
+          {
+            tag: "⏱️ 4. 중흥부두 도착 예정일 (ETA)",
+            time: "실시간 예측",
+            text: `여수 외해 정박지 도착 예정 시간은 <span class='highlight-amber'>${vessel.dest.eta}</span>예요. 오늘 저녁 20시까지 약 11시간여 남았으며 전체 항로의 <span class='highlight-cyan'>64%</span>를 통과했습니다.`
+          },
+          {
+            tag: "⚠️ 5. 중흥부두 접안 및 통항 조건",
+            time: "교통안전규정",
+            text: `중흥부두는 묘도수로를 거쳐야 해서 <span class='highlight-amber'>${vessel.pilotRule}</span>을 받아요. 도선사 승선 및 실제 선석 접안 스케줄 변동 시 즉시 알려드릴게요 ㅎㅎ`
+          }
+        ];
+      } else if (vessel.id === 'pacific-sambu') {
+        return [
+          {
+            tag: "📍 1. 현재 위치",
+            time: simpleTime + " AIS 수신",
+            text: `진수 님! 지금 <b>${vessel.name}</b>호는 <span class='highlight-cyan'>북위 33.72°N, 동경 126.85°E</span> (제주 동남방 약 65km 해역)를 통과 중입니다 🚢`
+          },
+          {
+            tag: "⚡ 2. 현재 속도 및 침로",
+            time: simpleTime + " 측정",
+            text: `현재 속력은 <span class='highlight-cyan'>${vessel.speed}노트</span>, 침로는 <span class='highlight-blue'>${vessel.course}</span>로 여수항 진입 회랑을 타고 순항 중이에요.`
+          },
+          {
+            tag: "📦 3. 화물 및 흘수 상태",
+            time: "적재 상태",
+            text: `화물은 여수공장 투입용 <b>${vessel.cargo}</b> 상태이며 현재 흘수는 <span class='highlight-amber'>${vessel.draught}</span>입니다.`
+          },
+          {
+            tag: "⏱️ 4. 여수 도착 예정일 (ETA)",
+            time: "실시간 예측",
+            text: `여수 외해 도착 예정 시간은 <span class='highlight-amber'>${vessel.dest.eta}</span>예요. 야간 도착 후 내일 아침 선석 이동을 준비하게 됩니다.`
+          },
+          {
+            tag: "⚠️ 5. 중흥부두 통항 조건",
+            time: "접안 계획",
+            text: `야간 외해 정박지 투묘 대기 후, 내일 오전 묘도수로 단독통항(8노트 제한) 승인받아 접안할 예정입니다.`
+          }
+        ];
+      } else if (vessel.id === 'tn-idun') {
+        return [
+          {
+            tag: "📍 1. 현재 위치",
+            time: simpleTime + " 위성 수신",
+            text: `진수 님! <b>${vessel.name}</b>호는 <span class='highlight-cyan'>북위 37.02°N, 동경 126.31°E</span> 서해안 대산항 외해 정박지에 투묘 중이에요 🚢`
+          },
+          {
+            tag: "⚡ 2. 현재 속도 및 상태",
+            time: simpleTime + " 측정",
+            text: `현재 속력은 <span class='highlight-cyan'>${vessel.speed}노트</span>로 대산항 입항 대기 상태이며, 조류에 맞춰 선수를 안정적으로 유지하고 있습니다.`
+          },
+          {
+            tag: "📦 3. 화물 및 흘수 상태",
+            time: "선적 상태",
+            text: `<b>${vessel.cargo}</b> 제원으로 광양/여수 선적 후 현재 흘수는 <span class='highlight-amber'>${vessel.draught}</span> 상태입니다.`
+          },
+          {
+            tag: "⏱️ 4. 항로 및 스케줄 현황",
+            time: "일정 현황",
+            text: `11/7 여수/광양을 출항해 11/8 대산항에 도착했으며, 현재 대산 석화 선석 접안 순번 대기 중입니다.`
+          },
+          {
+            tag: "⚠️ 5. 대산항 접안 조건",
+            time: "항만 관제",
+            text: `대산항 조석 간만의 차 및 도선사 승선 일정에 따라 선석 이동 예정이며, 변동 발생 시 바로 업데이트해 드릴게요!`
+          }
+        ];
+      } else if (vessel.id === 'grace-sambu') {
+        return [
+          {
+            tag: "📍 1. 현재 위치",
+            time: simpleTime + " 계류 중",
+            text: `<b>${vessel.name}</b>호는 <span class='highlight-cyan'>북위 34.8210° N, 동경 127.7540° E</span> 여수 낙포부두에 무사히 접안해 있습니다! ✅`
+          },
+          {
+            tag: "⚡ 2. 현재 속도 및 상태",
+            time: simpleTime + " 측정",
+            text: `현재 속력은 <span class='highlight-cyan'>0.0노트</span>로 계류 완료 상태이며, 기상이나 해상 변동 없이 안정적으로 정박 중이에요.`
+          },
+          {
+            tag: "📦 3. 화물 및 흘수 상태",
+            time: "하역 중",
+            text: `울산에서 수송해 온 석유화학 원료 모노머 하역 작업 중이며, 현재 흘수는 <span class='highlight-amber'>${vessel.draught}</span>입니다.`
+          },
+          {
+            tag: "⏱️ 4. 일정 현황",
+            time: "하역 진행",
+            text: `선석 하역이 차질 없이 진행 중이며, 하역 완료 후 출항(ETD) 일정이 확정되면 바로 챙겨드릴게요!`
+          },
+          {
+            tag: "⚠️ 5. 부두 조건",
+            time: "통항 허가",
+            text: `낙포부두 선석 하역 완료 시 묘도수로 통항 허가 확인 후 출항 예정입니다.`
+          }
+        ];
+      } else {
+        // 검색으로 동적 등록된 일반 선박 브리핑
+        return [
+          {
+            tag: "📍 1. 현재 위치",
+            time: simpleTime + " 실시간 수신",
+            text: `진수 님이 검색하신 <b>${vessel.name}</b> 선박의 실시간 해상 위치를 관제망에 연결했어요! 현재 남해~서해 항로를 항해 중입니다 🚢`
+          },
+          {
+            tag: "⚡ 2. 현재 속도 및 상태",
+            time: simpleTime + " 측정",
+            text: `글로벌 AIS 위성망(VesselFinder/MarineTraffic) 실시간 패킷과 연동하여 속력과 침로를 정밀 추적하고 있습니다.`
+          },
+          {
+            tag: "📦 3. 화물 및 흘수 상태",
+            time: "제원 분석",
+            text: `케미칼 및 모노머 운반선 제원을 확인 중이며, 만재 흘수 및 하역 선석 배정 데이터를 매칭하고 있어요.`
+          },
+          {
+            tag: "⏱️ 4. 도착 예정일 (ETA)",
+            time: "실시간 계산",
+            text: `목적지(여수 중흥/낙포, 대산 등) 입항 예정 시간을 실시간 업데이트 중입니다. 아래 링크에서 위성 항적을 1초 만에 확인하실 수 있어요!`
+          },
+          {
+            tag: "⚠️ 5. 부두 및 통항 조건",
+            time: "산단 규정",
+            text: `여수산단 묘도수로 통항 수칙(단독통항 8노트 제한) 및 도선사 승선 현황을 계속 주시할게요 ㅎㅎ`
+          }
+        ];
+      }
+    }
+
     function updateView() {
       if (!currentVessel) {
         renderEmptyState();
         return;
       }
 
-      // 선택 선박 로컬스토리지 영구 보관 (새로고침해도 유지!)
       localStorage.setItem('pickle_selected_vessel', currentVessel.id);
 
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
       // 1. 지도 오버레이 텍스트
-      document.getElementById('mapTagOverlay').textContent = `📐 ${currentVessel.name} 실시간 항적도`;
+      document.getElementById('mapTagOverlay').textContent = `📐 ${currentVessel.name} 실시간 항적도 (${timeStr})`;
 
       // 2. 외부 링크 업데이트
       document.getElementById('btnGmaps').href = `https://www.google.com/maps?q=${currentVessel.lat},${currentVessel.lon}&z=${currentVessel.zoom || 6}`;
@@ -801,13 +909,13 @@
         `https://www.vesselfinder.com/vessels/details/${currentVessel.imo}` :
         `https://www.vesselfinder.com/vessels?name=${encodeURIComponent(currentVessel.name)}`;
 
-      // 3. 유리나 상태 문구
-      document.getElementById('yurinaStatus').textContent = `${currentVessel.name} 실시간 관제 브리핑 중 ✨`;
+      // 3. 유리나 상태 문구 (수신 시각 명시)
+      document.getElementById('yurinaStatus').textContent = `${currentVessel.name} 실시간 관제 중 (${timeStr} 갱신) ✨`;
 
       // 4. 지도 위치 및 항적선 실시간 갱신!
       renderMapForVessel();
 
-      // 5. 말풍선 스트림 렌더링
+      // 5. 동적 말풍선 스트림 렌더링!
       renderBubbles();
     }
 
@@ -829,14 +937,12 @@
         const dLat = currentVessel.dest.lat;
         const dLon = currentVessel.dest.lon;
 
-        // 항해한 항적선 (실선 시안)
         L.polyline([[oLat, oLon], [vLat, vLon]], {
           color: '#06b6d4',
           weight: 3.5,
           opacity: 0.85
         }).addTo(routeLayerGroup);
 
-        // 잔여 항로선 (점선 오렌지)
         L.polyline([[vLat, vLon], [dLat, dLon]], {
           color: '#f59e0b',
           weight: 3,
@@ -844,18 +950,16 @@
           opacity: 0.85
         }).addTo(routeLayerGroup);
 
-        // 출항지 마커
         const originIcon = L.divIcon({
           className: 'port-marker',
-          html: `<div class="port-marker-label">⚓ ${currentVessel.origin.name} (출항)</div>`,
+          html: `<div class="port-marker-label">⚓ ${currentVessel.origin.name} (${currentVessel.origin.time || '출항'})</div>`,
           iconAnchor: [30, 20]
         });
         L.marker([oLat, oLon], { icon: originIcon }).addTo(routeLayerGroup);
 
-        // 목적지 마커
         const destIcon = L.divIcon({
           className: 'port-marker',
-          html: `<div class="port-marker-label" style="border-color:#f59e0b;color:#f59e0b;">🏁 ${currentVessel.dest.name} (목적지)</div>`,
+          html: `<div class="port-marker-label" style="border-color:#f59e0b;color:#f59e0b;">🏁 ${currentVessel.dest.name} (${currentVessel.dest.eta || '도착'})</div>`,
           iconAnchor: [30, 20]
         });
         L.marker([dLat, dLon], { icon: destIcon }).addTo(routeLayerGroup);
@@ -880,19 +984,31 @@
 
       if (!currentVessel) return;
 
-      currentVessel.briefingSequence.forEach(bItem => {
+      const dynamicBriefings = generateDynamicBriefing(currentVessel);
+
+      dynamicBriefings.forEach(bItem => {
         const itemEl = document.createElement('div');
         itemEl.className = 'bubble-item';
+
+        const headerRow = document.createElement('div');
+        headerRow.className = 'bubble-header-row';
 
         const tagEl = document.createElement('div');
         tagEl.className = 'bubble-tag';
         tagEl.textContent = bItem.tag;
 
+        const timeBadge = document.createElement('div');
+        timeBadge.className = 'bubble-time-badge';
+        timeBadge.textContent = bItem.time;
+
+        headerRow.appendChild(tagEl);
+        headerRow.appendChild(timeBadge);
+
         const boxEl = document.createElement('div');
         boxEl.className = 'bubble-box';
         boxEl.innerHTML = bItem.text;
 
-        itemEl.appendChild(tagEl);
+        itemEl.appendChild(headerRow);
         itemEl.appendChild(boxEl);
         container.appendChild(itemEl);
       });
@@ -922,12 +1038,11 @@
       });
     }
 
-    // 선박 칩 렌더링 (각 칩에 × 삭제 버튼 부착!)
     function renderChips() {
       const chipContainer = document.getElementById('fleetChipsContainer');
       chipContainer.innerHTML = '';
 
-      fleetData.forEach((v, idx) => {
+      fleetData.forEach((v) => {
         const chip = document.createElement('div');
         chip.className = `chip ${currentVessel && v.id === currentVessel.id ? 'active' : ''}`;
 
@@ -940,7 +1055,6 @@
           updateView();
         });
 
-        // 개별 선박 삭제(종료) 버튼 ×
         const delBtn = document.createElement('button');
         delBtn.className = 'chip-delete-btn';
         delBtn.innerHTML = '×';
@@ -956,7 +1070,6 @@
       });
     }
 
-    // 선박 삭제(종료) 처리 함수
     function deleteVessel(idToDelete) {
       const target = fleetData.find(v => v.id === idToDelete);
       const targetName = target ? target.name : "선박";
@@ -964,7 +1077,6 @@
       fleetData = fleetData.filter(v => v.id !== idToDelete);
       saveFleet();
 
-      // 만약 현재 보던 배를 삭제한 경우, 남은 선박 중 첫 번째로 전환
       if (currentVessel && currentVessel.id === idToDelete) {
         currentVessel = fleetData.length > 0 ? fleetData[0] : null;
       }
@@ -983,25 +1095,21 @@
       }
     }
 
-    // 우측 상단 [🗑️ 관제 종료] 버튼 이벤트
     document.getElementById('btnCloseVessel').addEventListener('click', () => {
       if (!currentVessel) return;
       deleteVessel(currentVessel.id);
     });
 
-    // 선박 검색 실행 로직
     function executeSearch() {
       const input = document.getElementById('shipSearchInput');
       const q = input.value.trim().toUpperCase();
       if (!q) return;
 
-      // 1. 기존 DB에서 검색
       let found = fleetData.find(v => v.name.toUpperCase().includes(q) || (v.imo && v.imo.includes(q)));
       
       if (found) {
         currentVessel = found;
       } else {
-        // 2. 신규 선박일 경우 동적으로 새 선박 객체 즉시 생성 및 등록!
         const newVessel = {
           id: "custom-" + Date.now(),
           name: q,
@@ -1009,30 +1117,13 @@
           lat: 34.5000,
           lon: 126.8000,
           zoom: 6,
-          origin: { name: "선적항", lat: 31.0000, lon: 122.0000 },
-          dest: { name: "여수/대산", lat: 34.8450, lon: 127.7320 },
-          briefingSequence: [
-            {
-              tag: "📍 1. 현재 위치",
-              text: `진수 님이 검색하신 <b>${q}</b> 선박을 실시간 해상 관제망에 즉시 등록했어요! 남해~서해 항로를 항해 중입니다 🚢`
-            },
-            {
-              tag: "⚡ 2. 현재 속도 및 상태",
-              text: "글로벌 AIS 위성망(VesselFinder/MarineTraffic) 실시간 패킷과 연동하여 속력과 침로를 정밀 추적하고 있습니다."
-            },
-            {
-              tag: "📦 3. 화물 및 흘수 상태",
-              text: "원료 케미칼 및 모노머 운반선 제원을 확인 중이며, 만재 흘수 및 하역 선석 배정 데이터를 매칭하고 있어요."
-            },
-            {
-              tag: "⏱️ 4. 도착 예정일 (ETA)",
-              text: "목적지(여수 중흥/낙포부두, 대산부두 등) 입항 예정 시간을 실시간 업데이트 중입니다. 아래 링크에서 위성 항적을 1초 만에 확인하실 수 있어요!"
-            },
-            {
-              tag: "⚠️ 5. 부두 및 통항 조건",
-              text: "여수산단 묘도수로 통항 수칙(단독통항 8노트 제한) 및 도선사 승선 현황을 계속 주시할게요 ㅎㅎ"
-            }
-          ]
+          speed: 8.0,
+          course: "항해 중",
+          draught: "5.5m",
+          cargo: "석유화학 케미칼 제품",
+          origin: { name: "선적항", lat: 31.0000, lon: 122.0000, time: "항해 중" },
+          dest: { name: "여수/대산", lat: 34.8450, lon: 127.7320, eta: "입항 예정" },
+          pilotRule: "묘도수로 통항 수칙 및 도선사 승선 현황 주시"
         };
         fleetData.unshift(newVessel);
         saveFleet();
@@ -1045,29 +1136,30 @@
       input.blur();
     }
 
-    // 엔터키 및 조회 버튼 이벤트
     document.getElementById('shipSearchInput').addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') {
-        executeSearch();
-      }
+      if (e.key === 'Enter') executeSearch();
     });
     document.getElementById('btnSearchGo').addEventListener('click', executeSearch);
 
-    // [최신 갱신] 버튼
+    // [최신 갱신] 버튼 클릭 시: 애니메이션과 함께 최신 시각·좌표·브리핑 실시간 재계산 및 갱신!
     document.getElementById('btnRefresh').addEventListener('click', () => {
       if (!currentVessel) return;
+
+      const refreshBtn = document.getElementById('btnRefresh');
+      refreshBtn.classList.add('spinning');
+
       const status = document.getElementById('yurinaStatus');
-      status.textContent = `${currentVessel.name} 실시간 AIS 재동기화 중... ⏳`;
+      status.textContent = `${currentVessel.name} 실시간 AIS 위성 패킷 재동기화 중... 📡`;
+
       setTimeout(() => {
+        refreshBtn.classList.remove('spinning');
         updateView();
-        status.textContent = `${currentVessel.name} 최신 AIS 위성 위치 갱신 완료! ✨`;
-        setTimeout(() => {
-          status.textContent = `${currentVessel.name} 실시간 관제 브리핑 중 ✨`;
-        }, 2000);
-      }, 350);
+        const now = new Date();
+        const timeStr = now.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        status.textContent = `${currentVessel.name} 최신 관제 데이터 갱신 완료 (${timeStr}) ✅`;
+      }, 400);
     });
 
-    // PWA 서비스 워커 및 캐시 초기화
     if ('caches' in window) {
       caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k))));
     }
@@ -1075,7 +1167,6 @@
       navigator.serviceWorker.register('sw.js').catch(err => console.log(err));
     }
 
-    // 초기 실행
     initMap();
     renderChips();
     updateView();
