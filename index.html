@@ -233,6 +233,12 @@
     /* ============================================================ */
     /* 갤럭시 Z Fold8 최적화: 커버 화면(접었을 때) & 메인 화면(펼쳤을 때) */
     /* ============================================================ */
+    .dashboard-split-layout {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+      width: 100%;
+    }
 
     /* 1. 커버화면 (Fold8 접힘: 좁고 긴 세로화면 가로폭 < 680px) */
     @media (max-width: 679px) {
@@ -246,6 +252,7 @@
       .chip { padding: 4px 10px; font-size: 11px; }
 
       .dashboard-split-layout {
+        display: grid;
         grid-template-columns: 1fr;
         gap: 10px;
       }
@@ -290,7 +297,8 @@
     /* 2. 메인 대화면 (Fold8 펼침: 가로폭 >= 680px) */
     @media (min-width: 680px) {
       .dashboard-split-layout {
-        grid-template-columns: 1.15fr 1fr;
+        display: grid;
+        grid-template-columns: 1.1fr 1fr;
         align-items: start;
         gap: 14px;
       }
@@ -300,6 +308,10 @@
         top: 112px;
         align-self: start;
         z-index: 10;
+        min-width: 0;
+      }
+      .right-briefing-column {
+        min-width: 0;
       }
       .map-frame {
         height: calc(100vh - 180px);
@@ -315,6 +327,7 @@
       display: flex;
       flex-direction: column;
       gap: 10px;
+      min-width: 0;
     }
 
     .map-frame {
@@ -433,6 +446,7 @@
       display: flex;
       flex-direction: column;
       gap: 10px;
+      min-width: 0;
     }
 
     .briefing-card {
