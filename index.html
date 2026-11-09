@@ -231,21 +231,70 @@
     }
 
     /* ============================================================ */
-    /* 좌우 2단 분할 레이아웃 (갤럭시 Z Fold8 최적화) */
+    /* 갤럭시 Z Fold8 최적화: 커버 화면(접었을 때) & 메인 화면(펼쳤을 때) */
     /* ============================================================ */
-    .dashboard-split-layout {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 14px;
-      width: 100%;
+
+    /* 1. 커버화면 (Fold8 접힘: 좁고 긴 세로화면 가로폭 < 680px) */
+    @media (max-width: 679px) {
+      .top-header {
+        padding: 8px 2px;
+        gap: 8px;
+      }
+      .brand-title { font-size: 15px; }
+      .search-box { padding: 5px 12px; }
+      .search-box input { font-size: 12.5px; }
+      .chip { padding: 4px 10px; font-size: 11px; }
+
+      .dashboard-split-layout {
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+
+      /* 커버화면에서도 지도를 상단에 콤팩트(210px)하게 고정하여 말풍선 스크롤 시에도 항상 관제 유지! */
+      .left-map-column {
+        position: sticky;
+        top: 96px;
+        z-index: 50;
+        background: var(--bg-page);
+        padding-bottom: 4px;
+      }
+      .map-frame {
+        height: 210px;
+      }
+      .map-tag-overlay {
+        font-size: 10px;
+        padding: 3px 8px;
+        top: 8px;
+        left: 8px;
+      }
+      .map-btn {
+        padding: 6px 8px;
+        font-size: 11px;
+      }
+
+      /* 말풍선 영역 콤팩트 튜닝 */
+      .briefing-card {
+        padding: 12px;
+        border-radius: 14px;
+        gap: 10px;
+      }
+      .avatar-wrapper { width: 44px; height: 44px; }
+      .yurina-name { font-size: 14.5px; }
+      .bubble-box {
+        padding: 10px 12px;
+        font-size: 13px;
+        line-height: 1.5;
+      }
     }
 
+    /* 2. 메인 대화면 (Fold8 펼침: 가로폭 >= 680px) */
     @media (min-width: 680px) {
       .dashboard-split-layout {
         grid-template-columns: 1.15fr 1fr;
         align-items: start;
+        gap: 14px;
       }
-      /* 폴드8 펼침 대화면: 좌측 지도는 화면에 항상 고정(Sticky), 우측 말풍선만 스크롤! */
+      /* 펼친 화면: 좌측에 시원한 고정 대형 지도, 우측에 말풍선 독립 스크롤 */
       .left-map-column {
         position: sticky;
         top: 112px;
