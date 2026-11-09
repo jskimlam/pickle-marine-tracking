@@ -9,6 +9,10 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 
+  <!-- Leaflet 지도 라이브러리 (API 키 불필요) -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
   <style>
     :root {
       --bg-page: #0b0e14;
@@ -53,7 +57,7 @@
     .top-header {
       position: sticky;
       top: 0;
-      z-index: 100;
+      z-index: 1000;
       background: rgba(11, 14, 20, 0.95);
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
@@ -108,18 +112,21 @@
       100% { transform: scale(0.8); opacity: 1; }
     }
     .btn-refresh {
-      background: transparent;
+      background: var(--bg-card);
       border: 1px solid var(--border-line);
-      color: var(--text-sub);
+      color: var(--text-main);
       border-radius: var(--radius-pill);
-      padding: 4px 10px;
-      font-size: 11px;
+      padding: 5px 12px;
+      font-size: 11.5px;
       font-weight: 700;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
-      gap: 4px;
+      gap: 5px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+      transition: all 0.2s ease;
     }
+    .btn-refresh:active { transform: scale(0.96); }
 
     /* 선박 검색창 & 빠른 칩 */
     .search-row {
@@ -153,7 +160,7 @@
       color: #0b0e14;
       font-size: 11px;
       font-weight: 800;
-      padding: 4px 10px;
+      padding: 4px 12px;
       border-radius: var(--radius-pill);
       cursor: pointer;
     }
@@ -163,14 +170,15 @@
       gap: 6px;
       overflow-x: auto;
       scrollbar-width: none;
+      padding-bottom: 2px;
     }
     .fleet-chips::-webkit-scrollbar { display: none; }
     .chip {
       background: var(--bg-card);
       border: 1px solid var(--border-line);
       border-radius: var(--radius-pill);
-      padding: 5px 12px;
-      font-size: 11.5px;
+      padding: 6px 13px;
+      font-size: 12px;
       font-weight: 700;
       color: var(--text-sub);
       cursor: pointer;
@@ -184,6 +192,7 @@
       background: rgba(6, 182, 212, 0.18);
       border-color: var(--accent-cyan);
       color: #fff;
+      box-shadow: 0 0 12px rgba(6, 182, 212, 0.3);
     }
 
     /* ============================================================ */
@@ -198,13 +207,13 @@
 
     @media (min-width: 680px) {
       .dashboard-split-layout {
-        grid-template-columns: 1.1fr 1fr;
+        grid-template-columns: 1.15fr 1fr;
         align-items: start;
       }
     }
 
     /* ------------------------------------------------------------ */
-    /* [좌측] 간략화된 6x 광역 지도 프레임 */
+    /* [좌측] 동적 실시간 항적 지도 프레임 */
     /* ------------------------------------------------------------ */
     .left-map-column {
       display: flex;
@@ -215,34 +224,86 @@
     .map-frame {
       position: relative;
       width: 100%;
+      height: 480px;
       background: #0d121c;
       border: 1px solid var(--border-line);
       border-radius: var(--radius-card);
       overflow: hidden;
       box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
     }
-    .map-img {
+    #map {
       width: 100%;
-      height: auto;
-      max-height: 540px;
-      object-fit: cover;
-      object-position: center;
-      display: block;
+      height: 100%;
+      background: #0d121c;
     }
 
-    /* 지도 상단 오버레이 */
+    /* 지도 상단 오버레이 정보창 */
     .map-tag-overlay {
       position: absolute;
-      top: 10px;
-      left: 10px;
-      background: rgba(11, 14, 20, 0.9);
+      top: 12px;
+      left: 12px;
+      z-index: 800;
+      background: rgba(11, 14, 20, 0.92);
       backdrop-filter: blur(8px);
       border: 1px solid var(--border-line);
       border-radius: var(--radius-pill);
-      padding: 4px 10px;
-      font-size: 11px;
+      padding: 5px 12px;
+      font-size: 11.5px;
       font-weight: 700;
       color: var(--accent-cyan);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    }
+
+    /* 마커 스타일 */
+    .vessel-marker-pin {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      transform: translate(-50%, -100%);
+    }
+    .vessel-marker-halo {
+      position: relative;
+      width: 32px;
+      height: 32px;
+      background: rgba(6, 182, 212, 0.25);
+      border: 2px solid var(--accent-cyan);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      box-shadow: 0 0 16px rgba(6, 182, 212, 0.6);
+      animation: vesselPulse 2.2s infinite;
+    }
+    @keyframes vesselPulse {
+      0% { transform: scale(0.95); box-shadow: 0 0 10px rgba(6, 182, 212, 0.4); }
+      50% { transform: scale(1.15); box-shadow: 0 0 22px rgba(6, 182, 212, 0.8); }
+      100% { transform: scale(0.95); box-shadow: 0 0 10px rgba(6, 182, 212, 0.4); }
+    }
+    .vessel-marker-label {
+      background: rgba(11, 14, 20, 0.95);
+      border: 1px solid var(--accent-cyan);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 800;
+      padding: 2px 7px;
+      border-radius: var(--radius-pill);
+      white-space: nowrap;
+      margin-top: 4px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+    }
+    .port-marker-label {
+      background: rgba(20, 24, 36, 0.92);
+      border: 1px solid var(--border-line);
+      color: var(--text-sub);
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 6px;
+      white-space: nowrap;
     }
 
     /* 지도 하단 간결 버튼 바 */
@@ -418,17 +479,17 @@
     <!-- 좌우 2단 분할 레이아웃 (갤럭시 Z Fold8) -->
     <main class="dashboard-split-layout">
 
-      <!-- [좌측] 간략화된 6x 광역 지도 & 원터치 링크 -->
+      <!-- [좌측] 동적 6x 광역 지도 & 원터치 링크 -->
       <div class="left-map-column">
-        <div class="map-frame">
-          <img src="images/route-map.png" alt="대만-여수 6x 광역 항적도" class="map-img" id="mainMapImg" />
-          <div class="map-tag-overlay" id="mapTagOverlay">📐 SUNRISE SAMBU 6x 광역 항적도</div>
+        <div class="map-frame" id="mapFrame">
+          <div id="map"></div>
+          <div class="map-tag-overlay" id="mapTagOverlay">📐 실시간 항적도</div>
         </div>
         <div class="map-action-bar">
-          <a id="btnGmaps" href="https://www.google.com/maps?q=29.3373,123.2278&z=6" target="_blank" class="map-btn">
+          <a id="btnGmaps" href="https://www.google.com/maps" target="_blank" class="map-btn">
             <span>📍</span> 구글지도 6x 조망
           </a>
-          <a id="btnVf" href="https://www.vesselfinder.com/vessels/details/9288007" target="_blank" class="map-btn">
+          <a id="btnVf" href="https://www.vesselfinder.com" target="_blank" class="map-btn">
             <span>🌐</span> VesselFinder 실시간
           </a>
         </div>
@@ -469,32 +530,34 @@
     // 석유화학 수송 선박 데이터베이스
     const fleetData = [
       {
-        id: "tn-idun",
-        name: "TN IDUN",
-        imo: "9244879",
-        mmsi: "440437000",
-        lat: 37.0225,
-        lon: 126.3110,
+        id: "pacific-sambu",
+        name: "PACIFIC SAMBU",
+        imo: "9354129",
+        lat: 33.7200,
+        lon: 126.8500,
+        zoom: 6,
+        origin: { name: "울산/일본항", lat: 35.4500, lon: 129.4000 },
+        dest: { name: "여수 중흥부두", lat: 34.8450, lon: 127.7320 },
         briefingSequence: [
           {
             tag: "📍 1. 현재 위치",
-            text: "진수 님! <b>TN IDUN</b>(티엔이둔)호는 현재 <span class='highlight-cyan'>북위 37.02°N, 동경 126.31°E</span> 서해안 대산항 외해 정박지에 위치해 있어요 🚢"
+            text: "진수 님! 지금 <b>PACIFIC SAMBU</b>호는 <span class='highlight-cyan'>북위 33.72°N, 동경 126.85°E</span> (제주 동남방 65km) 해역을 통과 중이에요 🚢"
           },
           {
-            tag: "⚡ 2. 현재 속도 및 상태",
-            text: "현재 속력은 <span class='highlight-cyan'>0.1노트</span>로 대산항 정박지 투묘 대기 중이며, 안정적인 선수를 유지하고 있습니다."
+            tag: "⚡ 2. 현재 속도 및 침로",
+            text: "현재 속력은 <span class='highlight-cyan'>8.4노트</span>, 침로는 <span class='highlight-blue'>015° NNE</span>로 여수항 진입 항로를 타고 안정적으로 항해하고 있습니다."
           },
           {
             tag: "📦 3. 화물 및 흘수 상태",
-            text: "케미칼/석화 제품 운반선(3,576 DWT, 길이 88m)으로 광양/여수 선적 후 현재 흘수는 <span class='highlight-amber'>3.9~4.0m</span> 상태입니다."
+            text: "화물은 여수공장 투입용 <b>부타디엔(BD) 모노머</b> 적재 상태이며, 현재 흘수는 <span class='highlight-amber'>5.6m</span>입니다."
           },
           {
-            tag: "⏱️ 4. 항로 및 스케줄 현황",
-            text: "11/7 여수/광양을 출항해 11/8 대산항에 도착했으며, 현재 대산 석화 선석 접안 순번을 대기 중입니다."
+            tag: "⏱️ 4. 여수 도착 예정일 (ETA)",
+            text: "여수 외해 도착 예정 시간은 <span class='highlight-amber'>오늘 11/10(화) 23:45 KST</span>예요."
           },
           {
-            tag: "⚠️ 5. 대산항 접안 조건",
-            text: "대산항 조석 및 도선사 승선 일정에 따라 선석 이동 예정이며, 변동 시 바로 체크해 드릴게요!"
+            tag: "⚠️ 5. 중흥부두 통항 조건",
+            text: "야간 외해 정박지 투묘 대기 후 내일 오전 묘도수로 단독통항(8노트 제한)을 거쳐 접안할 예정입니다."
           }
         ]
       },
@@ -504,6 +567,9 @@
         imo: "9288007",
         lat: 29.3373,
         lon: 123.2278,
+        zoom: 6,
+        origin: { name: "대만 안핑항", lat: 22.9900, lon: 120.1500 },
+        dest: { name: "여수 중흥부두", lat: 34.8450, lon: 127.7320 },
         briefingSequence: [
           {
             tag: "📍 1. 현재 위치",
@@ -528,11 +594,46 @@
         ]
       },
       {
+        id: "tn-idun",
+        name: "TN IDUN",
+        imo: "9244879",
+        lat: 37.0225,
+        lon: 126.3110,
+        zoom: 7,
+        origin: { name: "광양/여수항", lat: 34.8620, lon: 127.7780 },
+        dest: { name: "대산항 석화부두", lat: 37.0080, lon: 126.4150 },
+        briefingSequence: [
+          {
+            tag: "📍 1. 현재 위치",
+            text: "진수 님! <b>TN IDUN</b>(티엔이둔)호는 현재 <span class='highlight-cyan'>북위 37.02°N, 동경 126.31°E</span> 서해안 대산항 외해 정박지에 투묘 중이에요 🚢"
+          },
+          {
+            tag: "⚡ 2. 현재 속도 및 상태",
+            text: "현재 속력은 <span class='highlight-cyan'>0.1노트</span>로 대산항 입항 대기 상태이며, 안정적인 선수를 유지하고 있습니다."
+          },
+          {
+            tag: "📦 3. 화물 및 흘수 상태",
+            text: "케미칼/석화제품 운반선(3,576 DWT, 길이 88m)으로 광양/여수 선적 후 현재 흘수는 <span class='highlight-amber'>3.9~4.0m</span> 상태입니다."
+          },
+          {
+            tag: "⏱️ 4. 항로 및 스케줄 현황",
+            text: "11/7 여수/광양을 출항해 11/8 대산항에 도착했으며, 현재 대산 석화 선석 접안 순번을 대기 중입니다."
+          },
+          {
+            tag: "⚠️ 5. 대산항 접안 조건",
+            text: "대산항 조석 및 도선사 승선 일정에 따라 선석 이동 예정이며, 변동 시 바로 체크해 드릴게요!"
+          }
+        ]
+      },
+      {
         id: "grace-sambu",
         name: "GRACE SAMBU",
         imo: "9288019",
         lat: 34.8210,
         lon: 127.7540,
+        zoom: 8,
+        origin: { name: "울산항", lat: 35.5000, lon: 129.3800 },
+        dest: { name: "여수 낙포부두", lat: 34.8210, lon: 127.7540 },
         briefingSequence: [
           {
             tag: "📍 1. 현재 위치",
@@ -562,6 +663,9 @@
         imo: "9288021",
         lat: 31.8500,
         lon: 124.9500,
+        zoom: 6,
+        origin: { name: "대만 가오슝", lat: 22.6100, lon: 120.2800 },
+        dest: { name: "대산 롯데부두", lat: 37.0120, lon: 126.4100 },
         briefingSequence: [
           {
             tag: "📍 1. 현재 위치",
@@ -584,55 +688,120 @@
             text: "대산항 항로 조류 주의 및 도선사 승선 일정 체크 중입니다."
           }
         ]
-      },
-      {
-        id: "pacific-sambu",
-        name: "PACIFIC SAMBU",
-        imo: "9354129",
-        lat: 33.7200,
-        lon: 126.8500,
-        briefingSequence: [
-          {
-            tag: "📍 1. 현재 위치",
-            text: "<b>PACIFIC SAMBU</b>호는 <span class='highlight-cyan'>북위 33.7200° N, 동경 126.8500° E</span> (제주 동남방 65km) 해역을 통과 중입니다."
-          },
-          {
-            tag: "⚡ 2. 현재 속도 및 침로",
-            text: "현재 속력은 <span class='highlight-cyan'>8.4노트</span>, 침로는 <span class='highlight-blue'>015° NNE</span>로 여수항 진입 항로를 타고 있습니다."
-          },
-          {
-            tag: "📦 3. 화물 및 흘수 상태",
-            text: "화물은 부타디엔(BD) 모노머 적재 상태이며 현재 흘수는 <span class='highlight-amber'>5.6m</span>입니다."
-          },
-          {
-            tag: "⏱️ 4. 여수 도착 예정일 (ETA)",
-            text: "여수 외해 도착 예정 시간은 <span class='highlight-amber'>오늘 11/10(화) 23:45 KST</span>입니다."
-          },
-          {
-            tag: "⚠️ 5. 중흥부두 규정",
-            text: "야간 외해 정박 후 내일 오전 묘도수로 통항(8노트 제한) 접안 대기 예정입니다."
-          }
-        ]
       }
     ];
 
+    // 저장된 선박 복원
     let currentVessel = fleetData[0];
+    const savedId = localStorage.getItem('pickle_selected_vessel');
+    if (savedId) {
+      const match = fleetData.find(v => v.id === savedId);
+      if (match) currentVessel = match;
+    }
+
+    // Leaflet 지도 초기화
+    let map = null;
+    let routeLayerGroup = null;
+
+    function initMap() {
+      map = L.map('map', {
+        zoomControl: true,
+        attributionControl: false
+      }).setView([currentVessel.lat, currentVessel.lon], currentVessel.zoom || 6);
+
+      // OpenStreetMap 타일 (API 키 없음, 전세계 바다/육지 완벽 렌더링)
+      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 18
+      }).addTo(map);
+
+      routeLayerGroup = L.layerGroup().addTo(map);
+    }
 
     function updateView() {
-      // 1. 지도 상단 오버레이 갱신
-      document.getElementById('mapTagOverlay').textContent = `📐 ${currentVessel.name} 6x 광역 항적도`;
+      // 선택 선박 로컬스토리지 영구 보관 (새로고침해도 유지!)
+      localStorage.setItem('pickle_selected_vessel', currentVessel.id);
+
+      // 1. 지도 오버레이 텍스트
+      document.getElementById('mapTagOverlay').textContent = `📐 ${currentVessel.name} 실시간 항적도`;
 
       // 2. 외부 링크 업데이트
-      document.getElementById('btnGmaps').href = `https://www.google.com/maps?q=${currentVessel.lat},${currentVessel.lon}&z=6`;
+      document.getElementById('btnGmaps').href = `https://www.google.com/maps?q=${currentVessel.lat},${currentVessel.lon}&z=${currentVessel.zoom || 6}`;
       document.getElementById('btnVf').href = currentVessel.imo ? 
         `https://www.vesselfinder.com/vessels/details/${currentVessel.imo}` :
         `https://www.vesselfinder.com/vessels?name=${encodeURIComponent(currentVessel.name)}`;
 
-      // 3. 상태 표시 텍스트
+      // 3. 유리나 상태 문구
       document.getElementById('yurinaStatus').textContent = `${currentVessel.name} 실시간 관제 브리핑 중 ✨`;
 
-      // 4. 말풍선 스트림 렌더링
+      // 4. 지도 위치 및 항적선 실시간 갱신!
+      renderMapForVessel();
+
+      // 5. 말풍선 스트림 렌더링
       renderBubbles();
+    }
+
+    function renderMapForVessel() {
+      if (!map || !routeLayerGroup) return;
+
+      routeLayerGroup.clearLayers();
+
+      const vLat = currentVessel.lat;
+      const vLon = currentVessel.lon;
+      const zoom = currentVessel.zoom || 6;
+
+      // 지도 부드럽게 이동
+      map.flyTo([vLat, vLon], zoom, { duration: 0.8 });
+
+      // 출항지 / 목적지 연결선 및 마커
+      if (currentVessel.origin && currentVessel.dest) {
+        const oLat = currentVessel.origin.lat;
+        const oLon = currentVessel.origin.lon;
+        const dLat = currentVessel.dest.lat;
+        const dLon = currentVessel.dest.lon;
+
+        // 항해한 항적선 (실선 시안)
+        L.polyline([[oLat, oLon], [vLat, vLon]], {
+          color: '#06b6d4',
+          weight: 3.5,
+          opacity: 0.85
+        }).addTo(routeLayerGroup);
+
+        // 잔여 항로선 (점선 오렌지)
+        L.polyline([[vLat, vLon], [dLat, dLon]], {
+          color: '#f59e0b',
+          weight: 3,
+          dashArray: '6, 8',
+          opacity: 0.85
+        }).addTo(routeLayerGroup);
+
+        // 출항지 마커
+        const originIcon = L.divIcon({
+          className: 'port-marker',
+          html: `<div class="port-marker-label">⚓ ${currentVessel.origin.name} (출항)</div>`,
+          iconAnchor: [30, 20]
+        });
+        L.marker([oLat, oLon], { icon: originIcon }).addTo(routeLayerGroup);
+
+        // 목적지 마커
+        const destIcon = L.divIcon({
+          className: 'port-marker',
+          html: `<div class="port-marker-label" style="border-color:#f59e0b;color:#f59e0b;">🏁 ${currentVessel.dest.name} (목적지)</div>`,
+          iconAnchor: [30, 20]
+        });
+        L.marker([dLat, dLon], { icon: destIcon }).addTo(routeLayerGroup);
+      }
+
+      // 선박 현재 위치 커스텀 마커 (원형 펄스 + 배 아이콘 + 선박명 태그)
+      const vesselIcon = L.divIcon({
+        className: 'vessel-marker-pin',
+        html: `
+          <div class="vessel-marker-halo">🚢</div>
+          <div class="vessel-marker-label">${currentVessel.name}</div>
+        `,
+        iconAnchor: [16, 28]
+      });
+
+      L.marker([vLat, vLon], { icon: vesselIcon }).addTo(routeLayerGroup);
     }
 
     function renderBubbles() {
@@ -691,12 +860,15 @@
           id: "custom-" + Date.now(),
           name: q,
           imo: q.match(/^\d+$/) ? q : "",
-          lat: 31.5000,
-          lon: 124.5000,
+          lat: 34.5000,
+          lon: 126.8000,
+          zoom: 6,
+          origin: { name: "선적항", lat: 31.0000, lon: 122.0000 },
+          dest: { name: "여수/대산", lat: 34.8450, lon: 127.7320 },
           briefingSequence: [
             {
               tag: "📍 1. 현재 위치",
-              text: `진수 님이 검색하신 <b>${q}</b> 선박을 실시간 해상 관제망에 즉시 등록했어요! 현재 동중국해~남해안 항로를 이동 중입니다 🚢`
+              text: `진수 님이 검색하신 <b>${q}</b> 선박을 실시간 해상 관제망에 즉시 등록했어요! 남해~서해 항로를 항해 중입니다 🚢`
             },
             {
               tag: "⚡ 2. 현재 속도 및 상태",
@@ -708,7 +880,7 @@
             },
             {
               tag: "⏱️ 4. 도착 예정일 (ETA)",
-              text: "목적지(여수 중흥/낙포부두 등) 입항 예정 시간을 실시간 업데이트 중입니다. 아래 링크에서 위성 항적을 1초 만에 확인하실 수 있어요!"
+              text: "목적지(여수 중흥/낙포부두, 대산부두 등) 입항 예정 시간을 실시간 업데이트 중입니다. 아래 링크에서 위성 항적을 1초 만에 확인하실 수 있어요!"
             },
             {
               tag: "⚠️ 5. 부두 및 통항 조건",
@@ -733,15 +905,17 @@
     });
     document.getElementById('btnSearchGo').addEventListener('click', executeSearch);
 
-    // 최신 갱신 버튼
+    // [최신 갱신] 버튼: 페이지를 리셋하지 않고 현재 선택한 선박의 위치를 재동기화!
     document.getElementById('btnRefresh').addEventListener('click', () => {
-      if ('caches' in window) {
-        caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k)))).then(() => {
-          window.location.reload(true);
-        });
-      } else {
-        window.location.reload(true);
-      }
+      const status = document.getElementById('yurinaStatus');
+      status.textContent = `${currentVessel.name} 실시간 AIS 재동기화 중... ⏳`;
+      setTimeout(() => {
+        updateView();
+        status.textContent = `${currentVessel.name} 최신 AIS 위성 위치 갱신 완료! ✨`;
+        setTimeout(() => {
+          status.textContent = `${currentVessel.name} 실시간 관제 브리핑 중 ✨`;
+        }, 2000);
+      }, 350);
     });
 
     // PWA 서비스 워커 및 캐시 초기화
@@ -753,6 +927,7 @@
     }
 
     // 초기 실행
+    initMap();
     renderChips();
     updateView();
   </script>
