@@ -1351,26 +1351,33 @@
       vessel.computedEta = `${etaMonth}/${etaDay}(${dayName}) ${etaHour}:${etaMin} KST`;
     }
 
-    // 로컬스토리지에서 사용자 선박 목록 로드 (v10: 실시간 해상 추측항법 Dead Reckoning 엔진 탑재)
+    // 서버/저장 데이터는 검증한 뒤 적용한다. 기본값은 최초 실행용이며 최신 데이터를 덮지 않는다.
+    function isValidFleetVessel(vessel) {
+      const hasText = value => typeof value === 'string' && value.trim().length > 0;
+      const validPosition = point => point && Number.isFinite(point.lat) && Math.abs(point.lat) <= 90 &&
+        Number.isFinite(point.lon) && Math.abs(point.lon) <= 180;
+      const validRoute = route => route === undefined || (Array.isArray(route) && route.every(point =>
+        Array.isArray(point) && point.length === 2 && validPosition({ lat: point[0], lon: point[1] })));
+      return !!(vessel && hasText(vessel.id) && hasText(vessel.name) && validPosition(vessel) &&
+        Number.isFinite(vessel.speed) && vessel.speed >= 0 &&
+        (!vessel.imo || typeof vessel.imo === 'string') &&
+        validPosition(vessel.origin) && hasText(vessel.origin.name) &&
+        validPosition(vessel.dest) && hasText(vessel.dest.name) &&
+        ['course', 'draught', 'cargo', 'pilotRule'].every(key => vessel[key] === undefined || typeof vessel[key] === 'string') &&
+        (vessel.zoom === undefined || (Number.isFinite(vessel.zoom) && vessel.zoom >= 0 && vessel.zoom <= 22)) &&
+        validRoute(vessel.pastRoute) && validRoute(vessel.futureRoute) &&
+        (!vessel.baseFix || (validPosition(vessel.baseFix) && Number.isFinite(Date.parse(vessel.baseFix.time)))));
+    }
+
+    // 재실행·오프라인에서도 마지막으로 정상 수신한 선박 데이터 유지
     let fleetData = [];
     try {
-      const stored = localStorage.getItem('pickle_fleet_data_v10');
-      if (stored) fleetData = JSON.parse(stored);
+      const stored = JSON.parse(localStorage.getItem('pickle_fleet_data_v10'));
+      if (Array.isArray(stored) && stored.every(isValidFleetVessel)) fleetData = stored;
     } catch (e) {}
 
-    if (!fleetData || fleetData.length === 0) {
+    if (fleetData.length === 0) {
       fleetData = JSON.parse(JSON.stringify(defaultFleet));
-      saveFleet();
-    } else {
-      // 기본 선박들의 항로 및 부두 제원을 최신 공식 해로로 자동 병합
-      defaultFleet.forEach(defV => {
-        const idx = fleetData.findIndex(f => f.name.toUpperCase().trim() === defV.name.toUpperCase().trim() || f.id === defV.id);
-        if (idx >= 0) {
-          fleetData[idx] = Object.assign({}, fleetData[idx], defV);
-        } else {
-          fleetData.unshift(defV);
-        }
-      });
       saveFleet();
     }
 
@@ -1542,7 +1549,7 @@
           {
             tag: "📍 1. 현재 위치",
             time: simpleTime + " AIS 수신",
-            text: `${uName}! 지금 <b>${vessel.name}</b>호는 <span class='highlight-cyan'>북위 34.87°N, 동경 127.79°E</span> (광양/여수 외해 정박지)에 투묘 대기 중이에요 🚢`
+            text: `${uName}! 지금 <b>${vessel.name}</b>호는 <span class='highlight-cyan'>북위 ${vessel.lat.toFixed(2)}°N, 동경 ${vessel.lon.toFixed(2)}°E</span> (광양/여수 외해 정박지)에 투묘 대기 중이에요 🚢`
           },
           {
             tag: "⚡ 2. 현재 속도 및 침로",
@@ -1570,7 +1577,7 @@
           {
             tag: "📍 1. 현재 위치",
             time: simpleTime + " 위성 수신",
-            text: `${uName}! <b>${vessel.name}</b>호는 <span class='highlight-cyan'>북위 37.02°N, 동경 126.31°E</span> 서해안 대산항 외해 정박지에 투묘 대기 중이에요 🚢`
+            text: `${uName}! <b>${vessel.name}</b>호는 <span class='highlight-cyan'>북위 ${vessel.lat.toFixed(2)}°N, 동경 ${vessel.lon.toFixed(2)}°E</span> 서해안 대산항 외해 정박지에 투묘 대기 중이에요 🚢`
           },
           {
             tag: "⚡ 2. 현재 속도 및 침로",
@@ -1598,7 +1605,7 @@
           {
             tag: "📍 1. 현재 위치",
             time: simpleTime + " AIS 수신",
-            text: `${uName}! 지금 <b>${vessel.name}</b>호는 <span class='highlight-cyan'>북위 33.72°N, 동경 126.85°E</span> (제주 동남방 약 65km 해역)를 통과 중입니다 🚢`
+            text: `${uName}! 지금 <b>${vessel.name}</b>호는 <span class='highlight-cyan'>북위 ${vessel.lat.toFixed(2)}°N, 동경 ${vessel.lon.toFixed(2)}°E</span> (제주 동남방 약 65km 해역)를 통과 중입니다 🚢`
           },
           {
             tag: "⚡ 2. 현재 속도 및 침로",
@@ -1626,7 +1633,7 @@
           {
             tag: "📍 1. 현재 위치",
             time: simpleTime + " 계류 중",
-            text: `<b>${vessel.name}</b>호는 <span class='highlight-cyan'>북위 34.8210° N, 동경 127.7540° E</span> 여수 낙포부두에 무사히 접안해 있습니다! ✅`
+            text: `<b>${vessel.name}</b>호는 <span class='highlight-cyan'>북위 ${vessel.lat.toFixed(4)}° N, 동경 ${vessel.lon.toFixed(4)}° E</span> 여수 낙포부두에 무사히 접안해 있습니다! ✅`
           },
           {
             tag: "⚡ 2. 현재 속도 및 침로",
@@ -2020,79 +2027,75 @@
     });
     document.getElementById('btnSearchGo').addEventListener('click', executeSearch);
 
-    // [핵심] 네트워크에서 최신 선박 위성 좌표(fleet.json)를 캐시 없이 실시간 수신하여 즉시 동기화
-    async function syncFleetFromNetwork() {
-      try {
-        const res = await fetch('fleet.json?t=' + Date.now(), { cache: 'no-store' });
-        if (res.ok) {
+    // 초기 자동 수신과 수동 갱신이 겹쳐도 한 요청만 사용한다.
+    let fleetSyncPromise = null;
+    function syncFleetFromNetwork() {
+      if (fleetSyncPromise) return fleetSyncPromise;
+      fleetSyncPromise = (async () => {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 12000);
+        try {
+          const res = await fetch('fleet.json?t=' + Date.now(), { cache: 'no-store', signal: controller.signal });
+          if (!res.ok) throw new Error(`Fleet request failed: HTTP ${res.status}`);
           const remoteFleet = await res.json();
-          if (Array.isArray(remoteFleet) && remoteFleet.length > 0) {
-            remoteFleet.forEach(remV => {
-              const idx = fleetData.findIndex(f => f.id === remV.id || (f.imo && remV.imo && f.imo === remV.imo));
-              if (idx >= 0) {
-                fleetData[idx] = Object.assign({}, fleetData[idx], remV);
-              } else {
-                fleetData.unshift(remV);
-              }
-            });
-            saveFleet();
-            if (currentVessel) {
-              const match = fleetData.find(f => f.id === currentVessel.id);
-              if (match) currentVessel = match;
-            }
-            return true;
+          if (!Array.isArray(remoteFleet) || remoteFleet.length === 0 || !remoteFleet.every(isValidFleetVessel)) {
+            throw new Error('Invalid fleet data');
           }
+          const ids = new Set(remoteFleet.map(v => v.id));
+          const imos = remoteFleet.filter(v => v.imo).map(v => v.imo);
+          if (ids.size !== remoteFleet.length || new Set(imos).size !== imos.length) {
+            throw new Error('Duplicate fleet identity');
+          }
+
+          // 전체 응답을 검증한 뒤 한 번에 반영. 서버 선박은 서버 원본을 사용하고 사용자 추가 선박은 보존한다.
+          const nextFleet = [...fleetData];
+          remoteFleet.forEach(remV => {
+            const idx = nextFleet.findIndex(f => f.id === remV.id || (f.imo && remV.imo && f.imo === remV.imo));
+            if (idx >= 0) nextFleet[idx] = remV;
+            else nextFleet.push(remV);
+          });
+          const selected = currentVessel;
+          fleetData = nextFleet;
+          currentVessel = (selected && fleetData.find(f => f.id === selected.id || (f.imo && selected.imo && f.imo === selected.imo))) || fleetData[0] || null;
+          saveFleet();
+          return true;
+        } catch (err) {
+          console.warn('Network sync failed:', err);
+          return false;
+        } finally {
+          clearTimeout(timeout);
         }
-      } catch (err) {
-        console.warn('Network sync failed:', err);
-      }
-      return false;
+      })().finally(() => { fleetSyncPromise = null; });
+      return fleetSyncPromise;
     }
 
-    // [최신 갱신] 버튼 클릭 시: 앱을 닫지 않고도 네트워크에서 최신 위성 데이터를 실시간 수신해 즉시 갱신
+    // 수신 성공일 때만 화면·완료 문구 갱신. 실패하면 마지막 정상 데이터를 그대로 유지한다.
     document.getElementById('btnRefresh').addEventListener('click', async () => {
       const refreshBtn = document.getElementById('btnRefresh');
+      if (refreshBtn.disabled) return;
+      refreshBtn.disabled = true;
       refreshBtn.classList.add('spinning');
-
+      refreshBtn.setAttribute('aria-busy', 'true');
       const status = document.getElementById('yurinaStatus');
-      const agentName = (window.currentProfile && window.currentProfile.agentName) ? window.currentProfile.agentName : '유리나';
-
-      if (status && currentVessel) {
-        status.textContent = `📡 ${currentVessel.name} 실시간 위성 AIS 네트워크 패킷 수신 중...`;
-      }
-
-      // 1. 네트워크에서 최신 fleet.json 실시간 다운로드 및 병합!
-      await syncFleetFromNetwork();
-
-      // 2. 기본 선박들에 대해 defaultFleet의 최신 위성 좌표와 항로 동기화
-      defaultFleet.forEach(defV => {
-        const idx = fleetData.findIndex(f => f.name.toUpperCase().trim() === defV.name.toUpperCase().trim() || f.id === defV.id);
-        if (idx >= 0) {
-          fleetData[idx] = Object.assign({}, fleetData[idx], defV);
+      status.textContent = '📡 서버의 선박 데이터를 확인하는 중...';
+      try {
+        const updated = await syncFleetFromNetwork();
+        if (!updated) {
+          status.textContent = '⚠️ 갱신하지 못했습니다. 마지막으로 확인한 데이터를 유지합니다. 연결을 확인하고 다시 시도해 주세요.';
+          return;
         }
-      });
-      saveFleet();
-      if (currentVessel) {
-        const match = fleetData.find(f => f.id === currentVessel.id);
-        if (match) currentVessel = match;
-      }
-
-      // 3. 인앱 실시간 동적 갱신 즉시 실행 (타임스탬프, 속도, ETA, 말풍선 스트림 재계산)
-      updateView();
-      if (map) {
-        setTimeout(() => map.invalidateSize(), 50);
-      }
-
-      // 0.5초 후 스피너 멈추고 완료 안내
-      setTimeout(() => {
+        renderChips();
+        updateView();
+        if (map) map.invalidateSize();
+        status.textContent = '✅ 서버 선박 데이터 동기화 완료. 표시 위치에는 추측항법(DR) 계산값이 포함될 수 있습니다.';
+      } catch (err) {
+        console.warn('Refresh display failed:', err);
+        status.textContent = '⚠️ 화면 갱신 중 오류가 발생했습니다. 다시 시도해 주세요.';
+      } finally {
+        refreshBtn.disabled = false;
         refreshBtn.classList.remove('spinning');
-        if (status && currentVessel) {
-          status.textContent = `✅ ${currentVessel.name} 실시간 위성 좌표 동기화 완료!`;
-          setTimeout(() => {
-            status.textContent = `${agentName} 실시간 해상 관제 브리핑 중 ✨`;
-          }, 2000);
-        }
-      }, 500);
+        refreshBtn.removeAttribute('aria-busy');
+      }
     });
 
     if ('caches' in window) {
