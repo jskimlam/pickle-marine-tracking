@@ -1407,7 +1407,7 @@
           {
             tag: "📍 1. 현재 위치",
             time: simpleTime + " AIS 수신",
-            text: `${uName}! 지금 <b>${vessel.name}</b>호는 <span class='highlight-cyan'>북위 38.25°N, 동경 121.20°E</span> (보하이 해협 인근, 산둥반도 북방 해역)를 통과 중입니다 🚢`
+            text: `${uName}! 지금 <b>${vessel.name}</b>호는 <span class='highlight-cyan'>북위 ${vessel.lat.toFixed(2)}°N, 동경 ${vessel.lon.toFixed(2)}°E</span> (판진항 외해 잉커우항 남서방 해상)에 정박해 선적 대기 중입니다 🚢`
           },
           {
             tag: "⚡ 2. 현재 속도 및 침로",
@@ -1417,12 +1417,12 @@
           {
             tag: "📦 3. 화물 및 흘수 상태",
             time: "공선 (선적 대기)",
-            text: `현재 흘수는 <span class='highlight-amber'>${vessel.draught}</span> 상태입니다. ${uName} 말씀대로 여수 하역이 아니라 현지에서 원료를 **선적(적하)**하기 위해 이동 중인 공선(Ballast) 상태예요 (3,799 DWT 케미칼/석유제품 운반선).`
+            text: `현재 흘수는 <span class='highlight-amber'>${vessel.draught}</span> 상태입니다. ${uName} 말씀대로 여수 하역이 아니라 현지에서 원료를 **선적(적하)**하기 위해 이동해 정박한 공선(Ballast) 상태예요 (3,799 DWT 케미칼/석유제품 운반선).`
           },
           {
             tag: "⏱️ 4. 중국 판진항 도착 예정일 (ETA)",
             time: "실시간 예측",
-            text: `목적지 판진항(Panjin) 도착 예정 시간은 <span class='highlight-amber'>${vessel.dest.eta}</span>예요. 11/7 상하이 진산 석화기지를 출항해 약 <span class='highlight-cyan'>88%</span> 항로를 통과했습니다.`
+            text: `목적지 판진항(Panjin) 접안 대기 상태로 <span class='highlight-amber'>${vessel.dest.eta}</span>입니다. 11/7 상하이 진산 석화기지를 출항해 항해를 마치고 터미널 선석 배정을 기다리고 있습니다.`
           },
           {
             tag: "⚠️ 5. 판진항 접안 및 관제 조건",
@@ -1435,7 +1435,7 @@
           {
             tag: "📍 1. 현재 위치",
             time: simpleTime + " AIS 수신",
-            text: `${uName}! 지금 <b>${vessel.name}</b>호는 <span class='highlight-cyan'>북위 29.34°N, 동경 123.23°E</span> (동중국해 해상, 저우산 남동쪽 약 133km)를 통과 중입니다 🚢`
+            text: `${uName}! 지금 <b>${vessel.name}</b>호는 <span class='highlight-cyan'>북위 ${vessel.lat.toFixed(2)}°N, 동경 ${vessel.lon.toFixed(2)}°E</span> (동중국해 북부 해상, 상하이 북동쪽 약 190km · 제주도 남서방)를 통과해 여수로 북상 중입니다 🚢`
           },
           {
             tag: "⚡ 2. 현재 속도 및 침로",
@@ -1450,7 +1450,7 @@
           {
             tag: "⏱️ 4. 여수 중흥부두 도착 예정일 (ETA)",
             time: "실시간 예측",
-            text: `여수 외해 정박지 도착 예정 시간은 <span class='highlight-amber'>${vessel.dest.eta}</span>예요. 오늘 저녁 20시까지 약 10시간여 남았으며 전체 항로의 <span class='highlight-cyan'>68%</span>를 통과했습니다.`
+            text: `여수 외해 도착 예정 시간은 <span class='highlight-amber'>${vessel.dest.eta}</span>입니다. 여수 외해 도선점까지 잔여 거리는 약 220해리로 전체 항로의 <span class='highlight-cyan'>78%</span>를 통과했습니다.`
           },
           {
             tag: "⚠️ 5. 중흥부두 접안 및 통항 조건",
