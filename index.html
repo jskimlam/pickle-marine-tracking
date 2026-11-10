@@ -563,20 +563,23 @@
       display: flex;
       align-items: center;
       gap: 8px;
+      flex-wrap: nowrap;
     }
     .yurina-name {
       font-size: 16px;
       font-weight: 800;
       color: #fff;
+      white-space: nowrap;
     }
     .yurina-role-badge {
       background: rgba(192, 132, 252, 0.15);
       border: 1px solid rgba(192, 132, 252, 0.35);
       color: var(--accent-lilac);
-      font-size: 10.5px;
+      font-size: 11px;
       font-weight: 700;
       padding: 2px 8px;
       border-radius: var(--radius-pill);
+      white-space: nowrap;
     }
     .yurina-status-text {
       font-size: 12px;
@@ -800,14 +803,16 @@
       border: 1px solid rgba(239, 68, 68, 0.35);
       color: #fca5a5;
       border-radius: var(--radius-pill);
-      padding: 5px 11px;
-      font-size: 11px;
+      padding: 6px 12px;
+      font-size: 11.5px;
       font-weight: 700;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
       gap: 4px;
       transition: all 0.2s ease;
+      white-space: nowrap;
+      flex-shrink: 0;
     }
     .btn-close-vessel:hover {
       background: rgba(239, 68, 68, 0.25);
@@ -956,27 +961,21 @@
       <div class="right-briefing-column">
         <div class="briefing-card">
           
-          <!-- 피클 프로필 헤더 & 담당자 피클 교체 / 관제 종료 버튼 -->
+          <!-- 피클 프로필 헤더 & 관제 종료 버튼 -->
           <div class="yurina-profile-row">
-            <div class="avatar-wrapper" id="pickleAvatarWrapper" style="cursor:pointer;" title="자기 피클로 담당자 교체">
-              <img src="icons/yurina-avatar.png" alt="피클 비서" class="avatar-img" id="pickleAvatarImg" />
-              <div class="consonant-avatar" id="pickleConsonantAvatar" style="display:none;">ㅇ</div>
+            <div class="avatar-wrapper" id="pickleAvatarWrapper">
+              <img src="icons/yurina-avatar.png" alt="유리나 비서" class="avatar-img" id="pickleAvatarImg" />
             </div>
-            <div class="yurina-meta" id="pickleMeta" style="cursor:pointer;" title="자기 피클로 담당자 교체">
+            <div class="yurina-meta" id="pickleMeta">
               <div class="yurina-name-box">
                 <span class="yurina-name" id="pickleAgentName">유리나</span>
                 <span class="yurina-role-badge" id="pickleUserBadge">진수 님의 AI 비서</span>
               </div>
               <span class="yurina-status-text" id="yurinaStatus">실시간 해상 관제 브리핑 ✨</span>
             </div>
-            <div style="display:flex; gap:6px; align-items:center;">
-              <button class="btn-handover-pickle" id="btnHandoverPickle" title="자기 피클로 담당자 교체하기">
-                🥒 자기 피클로 담당자 교체
-              </button>
-              <button class="btn-close-vessel" id="btnCloseVessel" title="도착 완료 또는 목록에서 삭제">
-                🗑️
-              </button>
-            </div>
+            <button class="btn-close-vessel" id="btnCloseVessel" title="도착 완료 또는 목록에서 삭제">
+              🗑️ 관제 종료
+            </button>
           </div>
 
           <!-- 진수 님이 지정하신 브리핑 순서 말풍선 스트림 -->
@@ -989,57 +988,6 @@
       </div>
 
     </main>
-
-    <!-- 자기 피클로 담당자 교체 모달 -->
-    <div class="modal-overlay" id="pickleModal">
-      <div class="modal-card">
-        <div class="modal-header">
-          <div style="font-size:16.5px;font-weight:800;display:flex;align-items:center;gap:6px;color:#fff;">
-            <span>🥒</span> 자기 피클로 담당자 교체
-          </div>
-          <button class="modal-close-btn" id="btnCloseModal">×</button>
-        </div>
-
-        <div class="modal-body">
-          <div class="pickle-preview-box">
-            <div class="preview-avatar-wrap" id="previewAvatarWrap">
-              <img src="icons/yurina-avatar.png" class="avatar-img" id="previewImg" style="width:48px;height:48px;" />
-              <div class="preview-consonant" id="previewConsonant" style="display:none;">ㅇ</div>
-            </div>
-            <div style="display:flex;flex-direction:column;gap:3px;">
-              <div style="font-weight:800;font-size:16px;color:#fff;" id="previewAgentName">유리나</div>
-              <div style="font-size:12px;color:var(--text-sub);" id="previewUserGreeting">진수 님을 위한 해상 관제 브리핑</div>
-            </div>
-          </div>
-
-          <div class="modal-field">
-            <label class="modal-label">내 피클(비서) 이름</label>
-            <input type="text" id="inputAgentName" class="modal-input" placeholder="예: 유리나, 초롱이, 피클이" value="유리나" />
-          </div>
-
-          <div class="modal-field">
-            <label class="modal-label">내 이름 / 호칭</label>
-            <input type="text" id="inputUserName" class="modal-input" placeholder="예: 진수 님, 민수 님, 김대리님" value="진수 님" />
-          </div>
-
-          <div class="modal-field">
-            <label class="modal-label">피클 자음 캐릭터 선택</label>
-            <div class="consonant-grid" id="consonantGrid"></div>
-          </div>
-
-          <div class="modal-field">
-            <label class="modal-label">피클 테마 컬러</label>
-            <div class="color-grid" id="colorGrid"></div>
-          </div>
-        </div>
-
-        <div class="modal-footer">
-          <button class="btn-share-link" id="btnShareLink" title="동료 초대 링크 복사">🔗 동료 초대 링크 복사</button>
-          <button class="btn-reset-pickle" id="btnResetPickle">유리나로 복원</button>
-          <button class="btn-save-pickle" id="btnSavePickle">담당자 교체 완료 ✨</button>
-        </div>
-      </div>
-    </div>
 
   </div>
 
@@ -2118,6 +2066,7 @@
 
     function setupProfileModal() {
       const modal = document.getElementById('pickleModal');
+      if (!modal) return;
       const btnOpen = document.getElementById('btnHandoverPickle');
       const btnClose = document.getElementById('btnCloseModal');
       const avatarWrap = document.getElementById('pickleAvatarWrapper');
