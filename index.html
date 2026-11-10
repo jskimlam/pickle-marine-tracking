@@ -1008,16 +1008,16 @@
         id: "mi-lan",
         name: "MI LAN",
         imo: "9342047",
-        lat: 40.3754,
-        lon: 121.7703,
+        lat: 40.4383,
+        lon: 121.8390,
         zoom: 7,
-        speed: 12.1,
-        course: "024° NNE (북북동)",
+        speed: 0.3,
+        course: "274° W (외해 투묘 대기)",
         draught: "4.5m (공선 / 선적 대기)",
         cargo: "케미칼/석유제품 운반선 (3,799 DWT, 중국선적)",
         origin: { name: "중국 진산(Jinshan)", lat: 30.7000, lon: 121.3500, time: "11/7 출항" },
-        dest: { name: "중국 판진항(Panjin)", lat: 40.7100, lon: 122.0500, eta: "오늘 20:00~20:30 외해 정박지 도착 예정" },
-        pilotRule: "보하이만 판진항 석유화학 터미널 선적 선석 배정 대기",
+        dest: { name: "중국 판진항(Panjin)", lat: 40.7100, lon: 122.0500, eta: "외해 정박지 투묘 대기 중" },
+        pilotRule: "보하이해 랴오둥만 판진항 석유화학 터미널 선적 선석 배정 대기",
         yeosuInbound: false,
         pastRoute: [
           [30.7000, 121.3500],
@@ -1031,10 +1031,11 @@
           [38.2500, 121.2000], // 보하이 해협 진입
           [38.9000, 120.9000], // 보하이 해협 서측 통과
           [39.8000, 121.2000], // 랴오둥만 해상 회랑
-          [40.3754, 121.7703]  // 판진 외해 잉커우항 남서방 해상
+          [40.3754, 121.7703], // 판진 외해 잉커우항 남서방 해상
+          [40.4383, 121.8390]  // 판진 외해 정박지 투묘
         ],
         futureRoute: [
-          [40.3754, 121.7703],
+          [40.4383, 121.8390],
           [40.5500, 121.9000], // 판진 진입 도선 수로
           [40.7100, 122.0500]  // 판진항 터미널 선석
         ]
@@ -1081,15 +1082,15 @@
         id: "sunrise-sambu",
         name: "SUNRISE SAMBU",
         imo: "9288007",
-        lat: 29.8735,
-        lon: 123.5449,
+        lat: 31.9800,
+        lon: 124.7100,
         zoom: 6,
-        speed: 7.0,
-        course: "036° NE (북동)",
+        speed: 8.3,
+        course: "013° NNE (북북동)",
         draught: "6.4m",
         cargo: "스타이렌모노머(SM) 만재",
         origin: { name: "대만 안핑항", lat: 22.9900, lon: 120.1500, time: "11/7 출항" },
-        dest: { name: "여수 중흥부두", lat: 34.8428, lon: 127.6750, eta: "동중국해 북상 항해 중" },
+        dest: { name: "여수 중흥부두", lat: 34.8428, lon: 127.6750, eta: "11/12(목) 오전 입항 예정 (외해 ~220해리)" },
         pilotRule: "묘도수로 단독통항(교행 금지) 및 8노트 속도 제한",
         yeosuInbound: true,
         pastRoute: [
@@ -1098,11 +1099,13 @@
           [25.5000, 121.9000],
           [27.3000, 122.6000],
           [29.3373, 123.2278],
-          [29.8735, 123.5449]
+          [29.8735, 123.5449],
+          [30.7000, 124.1000],
+          [31.5925, 124.6031],
+          [31.9800, 124.7100]
         ],
         futureRoute: [
-          [29.8735, 123.5449],
-          [31.2000, 124.5000],
+          [31.9800, 124.7100],
           [32.8000, 125.8000],
           [34.1000, 127.3500],
           [34.6500, 127.8800], // 돌산도 외해
@@ -1270,10 +1273,10 @@
       return points;
     }
 
-    // 로컬스토리지에서 사용자 선박 목록 로드 (v8: MI LAN 판진 외해 진입 및 SUNRISE SAMBU 동중국해 최신 위성 좌표 반영)
+    // 로컬스토리지에서 사용자 선박 목록 로드 (v9: SUNRISE SAMBU 동중국해 북부 31.98°N 북상 및 MI LAN 판진 외해 투묘 최신 위성 좌표 반영)
     let fleetData = [];
     try {
-      const stored = localStorage.getItem('pickle_fleet_data_v8');
+      const stored = localStorage.getItem('pickle_fleet_data_v9');
       if (stored) fleetData = JSON.parse(stored);
     } catch (e) {}
 
@@ -1295,7 +1298,7 @@
 
     function saveFleet() {
       try {
-        localStorage.setItem('pickle_fleet_data_v8', JSON.stringify(fleetData));
+        localStorage.setItem('pickle_fleet_data_v9', JSON.stringify(fleetData));
       } catch (e) {}
     }
 
@@ -1945,6 +1948,19 @@
 
       if (status && currentVessel) {
         status.textContent = `📡 ${currentVessel.name} 실시간 위성 AIS 패킷 동기화 중...`;
+      }
+
+      // 기본 선박들에 대해 defaultFleet의 최신 위성 좌표와 항로 즉시 동기화
+      defaultFleet.forEach(defV => {
+        const idx = fleetData.findIndex(f => f.name.toUpperCase().trim() === defV.name.toUpperCase().trim() || f.id === defV.id);
+        if (idx >= 0) {
+          fleetData[idx] = Object.assign({}, fleetData[idx], defV);
+        }
+      });
+      saveFleet();
+      if (currentVessel) {
+        const match = fleetData.find(f => f.id === currentVessel.id);
+        if (match) currentVessel = match;
       }
 
       // 인앱 실시간 동적 갱신 즉시 실행 (타임스탬프, 속도, ETA, 말풍선 스트림 재계산)
