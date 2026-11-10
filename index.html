@@ -1310,7 +1310,7 @@
       let reachedIndex = 0;
 
       for (let i = 0; i < waypoints.length - 1; i++) {
-        const segDist = calculateNmDistance(waypoints[i][0], waypoints[i + 1][0], waypoints[i][1], waypoints[i + 1][1]);
+        const segDist = calculateNmDistance(waypoints[i][0], waypoints[i][1], waypoints[i + 1][0], waypoints[i + 1][1]);
         if (accumulatedNm + segDist >= totalAdvanceNm) {
           const remainInSeg = totalAdvanceNm - accumulatedNm;
           const ratio = segDist > 0 ? remainInSeg / segDist : 0;
@@ -1332,9 +1332,12 @@
       vessel.drElapsedHours = elapsedHours.toFixed(1);
 
       // 잔여 거리 계산 (current -> dest)
-      let remainNm = calculateNmDistance(currentLat, currentLon, waypoints[reachedIndex + 1] ? waypoints[reachedIndex + 1][0] : vessel.dest.lat, waypoints[reachedIndex + 1] ? waypoints[reachedIndex + 1][1] : vessel.dest.lon);
-      for (let j = reachedIndex + 1; j < waypoints.length - 1; j++) {
-        remainNm += calculateNmDistance(waypoints[j][0], waypoints[j + 1][0], waypoints[j][1], waypoints[j + 1][1]);
+      let remainNm = 0;
+      if (reachedIndex < waypoints.length - 1) {
+        remainNm += calculateNmDistance(currentLat, currentLon, waypoints[reachedIndex + 1][0], waypoints[reachedIndex + 1][1]);
+        for (let j = reachedIndex + 1; j < waypoints.length - 1; j++) {
+          remainNm += calculateNmDistance(waypoints[j][0], waypoints[j][1], waypoints[j + 1][0], waypoints[j + 1][1]);
+        }
       }
       vessel.remainingNm = Math.round(remainNm);
 
