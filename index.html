@@ -240,70 +240,107 @@
       width: 100%;
     }
 
+    /* 커버화면 전용 뷰 전환 탭바 */
+    .cover-tab-switcher {
+      display: none;
+    }
+
     /* 1. 커버화면 (Fold8 접힘: 좁고 긴 세로화면 가로폭 < 680px) */
     @media (max-width: 679px) {
       .top-header {
-        padding: 8px 2px;
-        gap: 8px;
+        padding: 8px 4px 4px 4px;
+        gap: 6px;
       }
       .brand-title { font-size: 15px; }
       .search-box { padding: 5px 12px; }
       .search-box input { font-size: 12.5px; }
       .chip { padding: 4px 10px; font-size: 11px; }
 
-      .dashboard-split-layout {
-        display: grid;
-        grid-template-columns: 1fr;
-        gap: 10px;
+      /* 커버화면 탭 스위처 활성화 ([🗺️ 지도] vs [💬 브리핑]) */
+      .cover-tab-switcher {
+        display: flex;
+        background: #141824;
+        border: 1px solid var(--border-line);
+        border-radius: var(--radius-pill);
+        padding: 4px;
+        margin: 6px 0 10px 0;
+        gap: 6px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
       }
-
-      /* 커버화면에서도 지도를 상단에 콤팩트(210px)하게 고정하여 말풍선 스크롤 시에도 항상 관제 유지! */
-      .left-map-column {
-        position: sticky;
-        top: 96px;
-        z-index: 50;
-        background: var(--bg-page);
-        padding-bottom: 4px;
-      }
-      .map-frame {
-        height: 210px;
-      }
-      .map-tag-overlay {
-        font-size: 10px;
-        padding: 3px 8px;
-        top: 8px;
-        left: 8px;
-      }
-      .map-btn {
-        padding: 6px 8px;
-        font-size: 11px;
-      }
-
-      /* 말풍선 영역 콤팩트 튜닝 */
-      .briefing-card {
-        padding: 12px;
-        border-radius: 14px;
-        gap: 10px;
-      }
-      .avatar-wrapper { width: 44px; height: 44px; }
-      .yurina-name { font-size: 14.5px; }
-      .bubble-box {
-        padding: 10px 12px;
+      .cover-tab-btn {
+        flex: 1;
+        background: transparent;
+        border: none;
+        color: var(--text-sub);
         font-size: 13px;
-        line-height: 1.5;
+        font-weight: 700;
+        padding: 8px 12px;
+        border-radius: var(--radius-pill);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        transition: all 0.2s ease;
+      }
+      .cover-tab-btn.active {
+        background: var(--accent-cyan);
+        color: #0b0e14;
+        box-shadow: 0 2px 8px rgba(6, 182, 212, 0.4);
+      }
+
+      .dashboard-split-layout {
+        display: block;
+      }
+
+      /* 지도 탭 활성화 시 */
+      body.cover-view-map .left-map-column {
+        display: flex !important;
+      }
+      body.cover-view-map .right-briefing-column {
+        display: none !important;
+      }
+      body.cover-view-map .map-frame {
+        height: calc(100vh - 230px);
+        min-height: 440px;
+      }
+
+      /* 브리핑 탭 활성화 시: 지도를 숨기고 유리나 말풍선을 전체 화면으로 시원하게 표시! */
+      body.cover-view-briefing .left-map-column {
+        display: none !important;
+      }
+      body.cover-view-briefing .right-briefing-column {
+        display: flex !important;
+      }
+
+      .briefing-card {
+        padding: 14px;
+        border-radius: 14px;
+        gap: 12px;
+      }
+      .avatar-wrapper { width: 46px; height: 46px; }
+      .yurina-name { font-size: 15px; }
+      .bubble-box {
+        padding: 12px 14px;
+        font-size: 13.5px;
+        line-height: 1.55;
       }
     }
 
     /* 2. 메인 대화면 (Fold8 펼침: 가로폭 >= 680px) */
     @media (min-width: 680px) {
+      .cover-tab-switcher {
+        display: none !important;
+      }
       .dashboard-split-layout {
         display: grid;
         grid-template-columns: 1.1fr 1fr;
         align-items: start;
         gap: 14px;
       }
-      /* 펼친 화면: 좌측에 시원한 고정 대형 지도, 우측에 말풍선 독립 스크롤 */
+      /* 펼친 화면: 좌측에 시원한 고정 대형 지도, 우측에 말풍선 독립 스크롤 동시 표시 */
       .left-map-column {
+        display: flex !important;
         position: sticky;
         top: 112px;
         align-self: start;
@@ -311,6 +348,7 @@
         min-width: 0;
       }
       .right-briefing-column {
+        display: flex !important;
         min-width: 0;
       }
       .map-frame {
@@ -645,6 +683,16 @@
         </div>
       </div>
     </header>
+
+    <!-- 커버화면 전용 뷰 전환 탭바 ([🗺️ 지도 관제] vs [💬 유리나 브리핑]) -->
+    <div class="cover-tab-switcher" id="coverTabSwitcher">
+      <button class="cover-tab-btn active" id="tabBtnMap" onclick="switchCoverTab('map')">
+        <span>🗺️</span> 지도 관제
+      </button>
+      <button class="cover-tab-btn" id="tabBtnBriefing" onclick="switchCoverTab('briefing')">
+        <span>💬</span> 유리나 브리핑
+      </button>
+    </div>
 
     <!-- 좌우 2단 분할 레이아웃 (갤럭시 Z Fold8) -->
     <main class="dashboard-split-layout">
@@ -1436,9 +1484,33 @@
       if (map) map.invalidateSize();
     });
 
+    // 커버화면 탭 전환 함수
+    function switchCoverTab(tab) {
+      localStorage.setItem('pickle_cover_tab', tab);
+      const tabMap = document.getElementById('tabBtnMap');
+      const tabBriefing = document.getElementById('tabBtnBriefing');
+
+      if (tab === 'briefing') {
+        document.body.classList.remove('cover-view-map');
+        document.body.classList.add('cover-view-briefing');
+        if (tabMap) tabMap.classList.remove('active');
+        if (tabBriefing) tabBriefing.classList.add('active');
+      } else {
+        document.body.classList.remove('cover-view-briefing');
+        document.body.classList.add('cover-view-map');
+        if (tabMap) tabMap.classList.add('active');
+        if (tabBriefing) tabBriefing.classList.remove('active');
+        setTimeout(() => { if (map) map.invalidateSize(); }, 150);
+      }
+    }
+
     initMap();
     renderChips();
     updateView();
+
+    // 초기 커버화면 탭 세팅
+    const initCoverTab = localStorage.getItem('pickle_cover_tab') || 'map';
+    switchCoverTab(initCoverTab);
   </script>
 </body>
 </html>
