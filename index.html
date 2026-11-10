@@ -583,6 +583,217 @@
       color: var(--text-sub);
     }
 
+    /* 자기 피클로 담당자 교체 버튼 */
+    .btn-handover-pickle {
+      background: linear-gradient(135deg, rgba(168, 85, 247, 0.28), rgba(99, 102, 241, 0.28));
+      border: 1px solid rgba(168, 85, 247, 0.55);
+      color: #f3e8ff;
+      border-radius: var(--radius-pill);
+      padding: 5px 11px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+    .btn-handover-pickle:hover {
+      background: linear-gradient(135deg, rgba(168, 85, 247, 0.5), rgba(99, 102, 241, 0.5));
+      border-color: #c084fc;
+      color: #fff;
+      transform: translateY(-1px);
+    }
+    .consonant-avatar {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      font-weight: 900;
+      color: #ffffff;
+      text-shadow: 0 2px 6px rgba(0,0,0,0.5);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+      animation: floatBreath 3.5s ease-in-out infinite;
+    }
+
+    /* 모달 팝업 */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.78);
+      backdrop-filter: blur(8px);
+      z-index: 9999;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .modal-overlay.active {
+      display: flex;
+    }
+    .modal-card {
+      background: #141824;
+      border: 1px solid rgba(168, 85, 247, 0.35);
+      border-radius: 20px;
+      width: 100%;
+      max-width: 420px;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.85), 0 0 30px rgba(168, 85, 247, 0.2);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border-line);
+      padding-bottom: 12px;
+    }
+    .modal-close-btn {
+      background: none;
+      border: none;
+      color: var(--text-sub);
+      font-size: 24px;
+      cursor: pointer;
+      line-height: 1;
+      padding: 0 4px;
+    }
+    .modal-body {
+      display: flex;
+      flex-direction: column;
+      gap: 13px;
+    }
+    .pickle-preview-box {
+      background: rgba(20, 24, 36, 0.9);
+      border: 1px solid var(--border-line);
+      border-radius: 14px;
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .preview-consonant {
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      font-weight: 900;
+      color: #fff;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.4);
+    }
+    .modal-field {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    .modal-label {
+      font-size: 11.5px;
+      font-weight: 700;
+      color: var(--text-sub);
+    }
+    .modal-input {
+      background: #0b0e14;
+      border: 1px solid var(--border-line);
+      border-radius: 8px;
+      padding: 9px 12px;
+      color: #fff;
+      font-size: 13px;
+      outline: none;
+    }
+    .modal-input:focus {
+      border-color: var(--accent-lilac);
+    }
+    .consonant-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 6px;
+    }
+    .consonant-btn {
+      background: #0b0e14;
+      border: 1px solid var(--border-line);
+      border-radius: 8px;
+      color: #fff;
+      font-size: 14px;
+      font-weight: 800;
+      padding: 6px 0;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.15s;
+    }
+    .consonant-btn.active {
+      background: var(--accent-lilac);
+      border-color: #fff;
+      color: #111;
+      transform: scale(1.05);
+    }
+    .color-grid {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    .color-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: all 0.15s;
+    }
+    .color-btn.active {
+      border-color: #fff;
+      transform: scale(1.2);
+      box-shadow: 0 0 10px rgba(255,255,255,0.6);
+    }
+    .modal-footer {
+      display: flex;
+      gap: 8px;
+      padding-top: 10px;
+      border-top: 1px solid var(--border-line);
+    }
+    .btn-share-link {
+      background: rgba(6, 182, 212, 0.15);
+      border: 1px solid rgba(6, 182, 212, 0.4);
+      color: var(--accent-cyan);
+      border-radius: var(--radius-pill);
+      padding: 8px 12px;
+      font-size: 11.5px;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .btn-reset-pickle {
+      background: transparent;
+      border: 1px solid var(--border-line);
+      color: var(--text-sub);
+      border-radius: var(--radius-pill);
+      padding: 8px 12px;
+      font-size: 11.5px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .btn-save-pickle {
+      flex: 1;
+      background: linear-gradient(135deg, #a855f7, #6366f1);
+      border: none;
+      color: #fff;
+      border-radius: var(--radius-pill);
+      padding: 8px 14px;
+      font-size: 12.5px;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(168, 85, 247, 0.4);
+    }
+
     /* 관제 종료 버튼 */
     .btn-close-vessel {
       background: rgba(239, 68, 68, 0.12);
@@ -745,21 +956,27 @@
       <div class="right-briefing-column">
         <div class="briefing-card">
           
-          <!-- 유리나 프로필 헤더 & 관제 종료 버튼 -->
+          <!-- 피클 프로필 헤더 & 담당자 피클 교체 / 관제 종료 버튼 -->
           <div class="yurina-profile-row">
-            <div class="avatar-wrapper">
-              <img src="icons/yurina-avatar.png" alt="유리나" class="avatar-img" />
+            <div class="avatar-wrapper" id="pickleAvatarWrapper" style="cursor:pointer;" title="자기 피클로 담당자 교체">
+              <img src="icons/yurina-avatar.png" alt="피클 비서" class="avatar-img" id="pickleAvatarImg" />
+              <div class="consonant-avatar" id="pickleConsonantAvatar" style="display:none;">ㅇ</div>
             </div>
-            <div class="yurina-meta">
+            <div class="yurina-meta" id="pickleMeta" style="cursor:pointer;" title="자기 피클로 담당자 교체">
               <div class="yurina-name-box">
-                <span class="yurina-name">유리나</span>
-                <span class="yurina-role-badge">AI 전담 비서</span>
+                <span class="yurina-name" id="pickleAgentName">유리나</span>
+                <span class="yurina-role-badge" id="pickleUserBadge">진수 님의 AI 비서</span>
               </div>
               <span class="yurina-status-text" id="yurinaStatus">실시간 해상 관제 브리핑 ✨</span>
             </div>
-            <button class="btn-close-vessel" id="btnCloseVessel" title="도착 완료 또는 목록에서 삭제">
-              🗑️ 관제 종료
-            </button>
+            <div style="display:flex; gap:6px; align-items:center;">
+              <button class="btn-handover-pickle" id="btnHandoverPickle" title="자기 피클로 담당자 교체하기">
+                🥒 자기 피클로 담당자 교체
+              </button>
+              <button class="btn-close-vessel" id="btnCloseVessel" title="도착 완료 또는 목록에서 삭제">
+                🗑️
+              </button>
+            </div>
           </div>
 
           <!-- 진수 님이 지정하신 브리핑 순서 말풍선 스트림 -->
@@ -772,6 +989,57 @@
       </div>
 
     </main>
+
+    <!-- 자기 피클로 담당자 교체 모달 -->
+    <div class="modal-overlay" id="pickleModal">
+      <div class="modal-card">
+        <div class="modal-header">
+          <div style="font-size:16.5px;font-weight:800;display:flex;align-items:center;gap:6px;color:#fff;">
+            <span>🥒</span> 자기 피클로 담당자 교체
+          </div>
+          <button class="modal-close-btn" id="btnCloseModal">×</button>
+        </div>
+
+        <div class="modal-body">
+          <div class="pickle-preview-box">
+            <div class="preview-avatar-wrap" id="previewAvatarWrap">
+              <img src="icons/yurina-avatar.png" class="avatar-img" id="previewImg" style="width:48px;height:48px;" />
+              <div class="preview-consonant" id="previewConsonant" style="display:none;">ㅇ</div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:3px;">
+              <div style="font-weight:800;font-size:16px;color:#fff;" id="previewAgentName">유리나</div>
+              <div style="font-size:12px;color:var(--text-sub);" id="previewUserGreeting">진수 님을 위한 해상 관제 브리핑</div>
+            </div>
+          </div>
+
+          <div class="modal-field">
+            <label class="modal-label">내 피클(비서) 이름</label>
+            <input type="text" id="inputAgentName" class="modal-input" placeholder="예: 유리나, 초롱이, 피클이" value="유리나" />
+          </div>
+
+          <div class="modal-field">
+            <label class="modal-label">내 이름 / 호칭</label>
+            <input type="text" id="inputUserName" class="modal-input" placeholder="예: 진수 님, 민수 님, 김대리님" value="진수 님" />
+          </div>
+
+          <div class="modal-field">
+            <label class="modal-label">피클 자음 캐릭터 선택</label>
+            <div class="consonant-grid" id="consonantGrid"></div>
+          </div>
+
+          <div class="modal-field">
+            <label class="modal-label">피클 테마 컬러</label>
+            <div class="color-grid" id="colorGrid"></div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn-share-link" id="btnShareLink" title="동료 초대 링크 복사">🔗 동료 초대 링크 복사</button>
+          <button class="btn-reset-pickle" id="btnResetPickle">유리나로 복원</button>
+          <button class="btn-save-pickle" id="btnSavePickle">담당자 교체 완료 ✨</button>
+        </div>
+      </div>
+    </div>
 
   </div>
 
@@ -1127,6 +1395,7 @@
       const now = new Date();
       const simpleTime = now.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
       const briefings = [];
+      const uName = (window.currentProfile && window.currentProfile.userName) ? window.currentProfile.userName : '진수 님';
 
       // 1~5단계: 선박별 실제 항로 및 제원에 1:1 매칭
       if (vessel.id === 'mi-lan' || vessel.name.toUpperCase().includes('MI LAN') || vessel.name.toUpperCase().includes('MILAN')) {
@@ -1134,7 +1403,7 @@
           {
             tag: "📍 1. 현재 위치",
             time: simpleTime + " AIS 수신",
-            text: `진수 님! 지금 <b>${vessel.name}</b>호는 <span class='highlight-cyan'>북위 38.25°N, 동경 121.20°E</span> (보하이 해협 인근, 산둥반도 북방 해역)를 통과 중입니다 🚢`
+            text: `${uName}! 지금 <b>${vessel.name}</b>호는 <span class='highlight-cyan'>북위 38.25°N, 동경 121.20°E</span> (보하이 해협 인근, 산둥반도 북방 해역)를 통과 중입니다 🚢`
           },
           {
             tag: "⚡ 2. 현재 속도 및 침로",
@@ -1144,7 +1413,7 @@
           {
             tag: "📦 3. 화물 및 흘수 상태",
             time: "공선 (선적 대기)",
-            text: `현재 흘수는 <span class='highlight-amber'>${vessel.draught}</span> 상태입니다. 진수 님 말씀대로 여수 하역이 아니라 현지에서 원료를 **선적(적하)**하기 위해 이동 중인 공선(Ballast) 상태예요 (3,799 DWT 케미칼/석유제품 운반선).`
+            text: `현재 흘수는 <span class='highlight-amber'>${vessel.draught}</span> 상태입니다. ${uName} 말씀대로 여수 하역이 아니라 현지에서 원료를 **선적(적하)**하기 위해 이동 중인 공선(Ballast) 상태예요 (3,799 DWT 케미칼/석유제품 운반선).`
           },
           {
             tag: "⏱️ 4. 중국 판진항 도착 예정일 (ETA)",
@@ -1162,7 +1431,7 @@
           {
             tag: "📍 1. 현재 위치",
             time: simpleTime + " AIS 수신",
-            text: `진수 님! 지금 <b>${vessel.name}</b>호는 <span class='highlight-cyan'>북위 29.34°N, 동경 123.23°E</span> (동중국해 해상, 저우산 남동쪽 약 133km)를 통과 중입니다 🚢`
+            text: `${uName}! 지금 <b>${vessel.name}</b>호는 <span class='highlight-cyan'>북위 29.34°N, 동경 123.23°E</span> (동중국해 해상, 저우산 남동쪽 약 133km)를 통과 중입니다 🚢`
           },
           {
             tag: "⚡ 2. 현재 속도 및 침로",
@@ -1190,7 +1459,7 @@
           {
             tag: "📍 1. 현재 위치",
             time: simpleTime + " AIS 수신",
-            text: `진수 님! 지금 <b>${vessel.name}</b>호는 <span class='highlight-cyan'>북위 34.87°N, 동경 127.79°E</span> (광양/여수 외해 정박지)에 투묘 대기 중이에요 🚢`
+            text: `${uName}! 지금 <b>${vessel.name}</b>호는 <span class='highlight-cyan'>북위 34.87°N, 동경 127.79°E</span> (광양/여수 외해 정박지)에 투묘 대기 중이에요 🚢`
           },
           {
             tag: "⚡ 2. 현재 속도 및 침로",
@@ -1218,7 +1487,7 @@
           {
             tag: "📍 1. 현재 위치",
             time: simpleTime + " 위성 수신",
-            text: `진수 님! <b>${vessel.name}</b>호는 <span class='highlight-cyan'>북위 37.02°N, 동경 126.31°E</span> 서해안 대산항 외해 정박지에 투묘 대기 중이에요 🚢`
+            text: `${uName}! <b>${vessel.name}</b>호는 <span class='highlight-cyan'>북위 37.02°N, 동경 126.31°E</span> 서해안 대산항 외해 정박지에 투묘 대기 중이에요 🚢`
           },
           {
             tag: "⚡ 2. 현재 속도 및 침로",
@@ -1246,7 +1515,7 @@
           {
             tag: "📍 1. 현재 위치",
             time: simpleTime + " AIS 수신",
-            text: `진수 님! 지금 <b>${vessel.name}</b>호는 <span class='highlight-cyan'>북위 33.72°N, 동경 126.85°E</span> (제주 동남방 약 65km 해역)를 통과 중입니다 🚢`
+            text: `${uName}! 지금 <b>${vessel.name}</b>호는 <span class='highlight-cyan'>북위 33.72°N, 동경 126.85°E</span> (제주 동남방 약 65km 해역)를 통과 중입니다 🚢`
           },
           {
             tag: "⚡ 2. 현재 속도 및 침로",
@@ -1327,7 +1596,7 @@
           {
             tag: "📍 1. 현재 위치",
             time: simpleTime + " 실시간 수신",
-            text: `진수 님! 지금 <b>${vessel.name}</b>호는 <span class='highlight-cyan'>북위 ${vessel.lat.toFixed(2)}°N, 동경 ${vessel.lon.toFixed(2)}°E</span> 해역을 항해 중입니다 🚢`
+            text: `${uName}! 지금 <b>${vessel.name}</b>호는 <span class='highlight-cyan'>북위 ${vessel.lat.toFixed(2)}°N, 동경 ${vessel.lon.toFixed(2)}°E</span> 해역을 항해 중입니다 🚢`
           },
           {
             tag: "⚡ 2. 현재 속도 및 침로",
@@ -1712,7 +1981,238 @@
       }
     }
 
+    // ============================================================
+    // [🥒 자기 피클로 담당자 교체] 프로필 및 인수인계 관리자
+    // ============================================================
+    const CONSONANTS = ['ㄱ', 'ㄴ', 'ㄷ', 'ㄹ', 'ㅁ', 'ㅂ', 'ㅅ', 'ㅇ', 'ㅈ', 'ㅊ', 'ㅋ', 'ㅌ', 'ㅍ', 'ㅎ'];
+    const COLORS = [
+      { name: '라일락', hex: '#c084fc' },
+      { name: '민트', hex: '#2dd4bf' },
+      { name: '스카이', hex: '#38bdf8' },
+      { name: '코랄', hex: '#f87171' },
+      { name: '레몬', hex: '#facc15' },
+      { name: '에메랄드', hex: '#4ade80' }
+    ];
+
+    const DEFAULT_PROFILE = {
+      agentName: '유리나',
+      userName: '진수 님',
+      consonant: 'ㅇ',
+      color: '#c084fc',
+      useDefaultImg: true
+    };
+
+    let pickleProfile = JSON.parse(JSON.stringify(DEFAULT_PROFILE));
+    window.currentProfile = pickleProfile;
+
+    function initPickleProfile() {
+      // 1. URL 파라미터 확인 (?agent=초롱이&user=민수&consonant=ㅊ&color=%232dd4bf)
+      const urlParams = new URLSearchParams(window.location.search);
+      const stored = localStorage.getItem('pickle_marine_profile');
+
+      if (urlParams.has('agent') || urlParams.has('user')) {
+        pickleProfile.agentName = urlParams.get('agent') || pickleProfile.agentName;
+        let u = urlParams.get('user') || pickleProfile.userName;
+        if (!u.endsWith('님') && !u.endsWith('님!') && !u.endsWith('책') && !u.endsWith('장')) u += ' 님';
+        pickleProfile.userName = u;
+        if (urlParams.has('consonant')) pickleProfile.consonant = urlParams.get('consonant');
+        if (urlParams.has('color')) pickleProfile.color = urlParams.get('color');
+        pickleProfile.useDefaultImg = false;
+        savePickleProfile();
+      } else if (stored) {
+        try {
+          pickleProfile = Object.assign(pickleProfile, JSON.parse(stored));
+        } catch (e) {}
+      }
+
+      applyProfileToUI();
+      setupProfileModal();
+    }
+
+    function savePickleProfile() {
+      localStorage.setItem('pickle_marine_profile', JSON.stringify(pickleProfile));
+    }
+
+    function applyProfileToUI() {
+      window.currentProfile = pickleProfile;
+      const nameEl = document.getElementById('pickleAgentName');
+      const badgeEl = document.getElementById('pickleUserBadge');
+      const imgEl = document.getElementById('pickleAvatarImg');
+      const consEl = document.getElementById('pickleConsonantAvatar');
+
+      if (nameEl) nameEl.textContent = pickleProfile.agentName;
+      if (badgeEl) badgeEl.textContent = `${pickleProfile.userName}의 AI 비서`;
+
+      if (pickleProfile.useDefaultImg) {
+        if (imgEl) imgEl.style.display = 'block';
+        if (consEl) consEl.style.display = 'none';
+      } else {
+        if (imgEl) imgEl.style.display = 'none';
+        if (consEl) {
+          consEl.style.display = 'flex';
+          consEl.textContent = pickleProfile.consonant;
+          consEl.style.background = pickleProfile.color;
+        }
+      }
+
+      const statusEl = document.getElementById('yurinaStatus');
+      if (statusEl && currentVessel) {
+        statusEl.textContent = `${pickleProfile.agentName} 실시간 해상 관제 중 ✨`;
+      }
+    }
+
+    function setupProfileModal() {
+      const modal = document.getElementById('pickleModal');
+      const btnOpen = document.getElementById('btnHandoverPickle');
+      const btnClose = document.getElementById('btnCloseModal');
+      const avatarWrap = document.getElementById('pickleAvatarWrapper');
+      const metaWrap = document.getElementById('pickleMeta');
+
+      const inputAgent = document.getElementById('inputAgentName');
+      const inputUser = document.getElementById('inputUserName');
+      const consonantGrid = document.getElementById('consonantGrid');
+      const colorGrid = document.getElementById('colorGrid');
+
+      let editConsonant = pickleProfile.consonant;
+      let editColor = pickleProfile.color;
+      let editUseDefault = pickleProfile.useDefaultImg;
+
+      function updatePreview() {
+        const pName = inputAgent.value.trim() || '유리나';
+        let uName = inputUser.value.trim() || '진수 님';
+        if (!uName.endsWith('님') && !uName.endsWith('책') && !uName.endsWith('장')) uName += ' 님';
+
+        document.getElementById('previewAgentName').textContent = pName;
+        document.getElementById('previewUserGreeting').textContent = `${uName}을 위한 해상 관제 브리핑`;
+
+        const prevImg = document.getElementById('previewImg');
+        const prevCons = document.getElementById('previewConsonant');
+
+        if (editUseDefault) {
+          prevImg.style.display = 'block';
+          prevCons.style.display = 'none';
+        } else {
+          prevImg.style.display = 'none';
+          prevCons.style.display = 'flex';
+          prevCons.textContent = editConsonant;
+          prevCons.style.background = editColor;
+        }
+      }
+
+      // 자음 버튼 생성
+      consonantGrid.innerHTML = '';
+      CONSONANTS.forEach(c => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = `consonant-btn ${c === editConsonant && !editUseDefault ? 'active' : ''}`;
+        btn.textContent = c;
+        btn.addEventListener('click', () => {
+          editConsonant = c;
+          editUseDefault = false;
+          consonantGrid.querySelectorAll('.consonant-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          updatePreview();
+        });
+        consonantGrid.appendChild(btn);
+      });
+
+      // 컬러 버튼 생성
+      colorGrid.innerHTML = '';
+      COLORS.forEach(cObj => {
+        const cBtn = document.createElement('button');
+        cBtn.type = 'button';
+        cBtn.className = `color-btn ${cObj.hex === editColor ? 'active' : ''}`;
+        cBtn.style.background = cObj.hex;
+        cBtn.title = cObj.name;
+        cBtn.addEventListener('click', () => {
+          editColor = cObj.hex;
+          colorGrid.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
+          cBtn.classList.add('active');
+          updatePreview();
+        });
+        colorGrid.appendChild(cBtn);
+      });
+
+      function openModal() {
+        inputAgent.value = pickleProfile.agentName;
+        inputUser.value = pickleProfile.userName;
+        editConsonant = pickleProfile.consonant;
+        editColor = pickleProfile.color;
+        editUseDefault = pickleProfile.useDefaultImg;
+
+        consonantGrid.querySelectorAll('.consonant-btn').forEach(b => {
+          b.classList.toggle('active', b.textContent === editConsonant && !editUseDefault);
+        });
+        colorGrid.querySelectorAll('.color-btn').forEach(b => {
+          b.classList.toggle('active', b.style.background === editColor || b.title === editColor);
+        });
+
+        updatePreview();
+        modal.classList.add('active');
+      }
+
+      function closeModal() {
+        modal.classList.remove('active');
+      }
+
+      if (btnOpen) btnOpen.addEventListener('click', openModal);
+      if (avatarWrap) avatarWrap.addEventListener('click', openModal);
+      if (metaWrap) metaWrap.addEventListener('click', openModal);
+      if (btnClose) btnClose.addEventListener('click', closeModal);
+
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeModal();
+      });
+
+      inputAgent.addEventListener('input', updatePreview);
+      inputUser.addEventListener('input', updatePreview);
+
+      // 담당자 교체 완료 저장
+      document.getElementById('btnSavePickle').addEventListener('click', () => {
+        const pName = inputAgent.value.trim() || '피클이';
+        let uName = inputUser.value.trim() || '담당자 님';
+        if (!uName.endsWith('님') && !uName.endsWith('책') && !uName.endsWith('장')) uName += ' 님';
+
+        pickleProfile.agentName = pName;
+        pickleProfile.userName = uName;
+        pickleProfile.consonant = editConsonant;
+        pickleProfile.color = editColor;
+        pickleProfile.useDefaultImg = editUseDefault;
+
+        savePickleProfile();
+        applyProfileToUI();
+        renderBubbles();
+        closeModal();
+
+        alert(`✅ 담당자 피클이 '${pName}' (${uName})으로 성공적으로 교체되었습니다!`);
+      });
+
+      // 유리나로 복원
+      document.getElementById('btnResetPickle').addEventListener('click', () => {
+        pickleProfile = JSON.parse(JSON.stringify(DEFAULT_PROFILE));
+        savePickleProfile();
+        applyProfileToUI();
+        renderBubbles();
+        closeModal();
+        alert(`💜 진수 님의 전담 비서 '유리나' 피클로 원상 복구되었습니다!`);
+      });
+
+      // 동료 초대 링크 복사
+      document.getElementById('btnShareLink').addEventListener('click', () => {
+        const pName = inputAgent.value.trim() || pickleProfile.agentName;
+        let uName = inputUser.value.trim() || pickleProfile.userName;
+        const link = `${window.location.origin}${window.location.pathname}?agent=${encodeURIComponent(pName)}&user=${encodeURIComponent(uName)}&consonant=${encodeURIComponent(editConsonant)}&color=${encodeURIComponent(editColor)}`;
+        
+        navigator.clipboard.writeText(link).then(() => {
+          alert(`🔗 동료 맞춤 초대 링크가 클립보드에 복사되었습니다!\n카카오톡이나 사내 메신저로 전달해 보세요:\n\n${link}`);
+        }).catch(() => {
+          prompt("아래 링크를 복사해 동료에게 전달하세요:", link);
+        });
+      });
+    }
+
     initMap();
+    initPickleProfile();
     renderChips();
     updateView();
 
