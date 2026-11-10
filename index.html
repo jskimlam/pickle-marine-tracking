@@ -1008,15 +1008,15 @@
         id: "mi-lan",
         name: "MI LAN",
         imo: "9342047",
-        lat: 38.2500,
-        lon: 121.2000,
-        zoom: 6,
-        speed: 9.2,
-        course: "345° NNW (북북서)",
+        lat: 40.3754,
+        lon: 121.7703,
+        zoom: 7,
+        speed: 12.1,
+        course: "024° NNE (북북동)",
         draught: "4.5m (공선 / 선적 대기)",
         cargo: "케미칼/석유제품 운반선 (3,799 DWT, 중국선적)",
         origin: { name: "중국 진산(Jinshan)", lat: 30.7000, lon: 121.3500, time: "11/7 출항" },
-        dest: { name: "중국 판진항(Panjin)", lat: 40.7100, lon: 122.0500, eta: "오늘 20:00 KST 입항" },
+        dest: { name: "중국 판진항(Panjin)", lat: 40.7100, lon: 122.0500, eta: "오늘 20:00~20:30 외해 정박지 도착 예정" },
         pilotRule: "보하이만 판진항 석유화학 터미널 선적 선석 배정 대기",
         yeosuInbound: false,
         pastRoute: [
@@ -1028,13 +1028,14 @@
           [37.7500, 122.7000], // 산둥 북동 해상
           [37.8500, 122.1000], // 웨이하이 북방 해상
           [38.0000, 121.5000], // 옌타이 북방 해상
-          [38.2500, 121.2000]  // 보하이 해협 진입
-        ],
-        futureRoute: [
-          [38.2500, 121.2000],
+          [38.2500, 121.2000], // 보하이 해협 진입
           [38.9000, 120.9000], // 보하이 해협 서측 통과
           [39.8000, 121.2000], // 랴오둥만 해상 회랑
-          [40.4000, 121.6000], // 판진 외해 진입수로
+          [40.3754, 121.7703]  // 판진 외해 잉커우항 남서방 해상
+        ],
+        futureRoute: [
+          [40.3754, 121.7703],
+          [40.5500, 121.9000], // 판진 진입 도선 수로
           [40.7100, 122.0500]  // 판진항 터미널 선석
         ]
       },
@@ -1080,15 +1081,15 @@
         id: "sunrise-sambu",
         name: "SUNRISE SAMBU",
         imo: "9288007",
-        lat: 29.3373,
-        lon: 123.2278,
+        lat: 29.8735,
+        lon: 123.5449,
         zoom: 6,
-        speed: 6.2,
-        course: "004° NNE",
+        speed: 7.0,
+        course: "036° NE (북동)",
         draught: "6.4m",
         cargo: "스타이렌모노머(SM) 만재",
         origin: { name: "대만 안핑항", lat: 22.9900, lon: 120.1500, time: "11/7 출항" },
-        dest: { name: "여수 중흥부두", lat: 34.8428, lon: 127.6750, eta: "오늘 20:00 KST" },
+        dest: { name: "여수 중흥부두", lat: 34.8428, lon: 127.6750, eta: "동중국해 북상 항해 중" },
         pilotRule: "묘도수로 단독통항(교행 금지) 및 8노트 속도 제한",
         yeosuInbound: true,
         pastRoute: [
@@ -1096,10 +1097,11 @@
           [24.1000, 120.9000],
           [25.5000, 121.9000],
           [27.3000, 122.6000],
-          [29.3373, 123.2278]
+          [29.3373, 123.2278],
+          [29.8735, 123.5449]
         ],
         futureRoute: [
-          [29.3373, 123.2278],
+          [29.8735, 123.5449],
           [31.2000, 124.5000],
           [32.8000, 125.8000],
           [34.1000, 127.3500],
@@ -1268,10 +1270,10 @@
       return points;
     }
 
-    // 로컬스토리지에서 사용자 선박 목록 로드 (v7: 산둥반도·고흥반도·여수반도 완벽 우회 해상 곡선 항로 적용)
+    // 로컬스토리지에서 사용자 선박 목록 로드 (v8: MI LAN 판진 외해 진입 및 SUNRISE SAMBU 동중국해 최신 위성 좌표 반영)
     let fleetData = [];
     try {
-      const stored = localStorage.getItem('pickle_fleet_data_v7');
+      const stored = localStorage.getItem('pickle_fleet_data_v8');
       if (stored) fleetData = JSON.parse(stored);
     } catch (e) {}
 
@@ -1293,7 +1295,7 @@
 
     function saveFleet() {
       try {
-        localStorage.setItem('pickle_fleet_data_v7', JSON.stringify(fleetData));
+        localStorage.setItem('pickle_fleet_data_v8', JSON.stringify(fleetData));
       } catch (e) {}
     }
 
