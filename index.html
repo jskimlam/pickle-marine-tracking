@@ -1323,21 +1323,6 @@
     } else {
       // 기본 선박들의 항로 및 부두 제원을 최신 공식 해로로 자동 병합
       defaultFleet.forEach(defV => {
-        const idx = fleetData.findIndex(f => f.id === defV.id);
-        if (idx !== -1) {
-          fleetData[idx].pastRoute = defV.pastRoute;
-          fleetData[idx].futureRoute = defV.futureRoute;
-          fleetData[idx].dest = defV.dest;
-          fleetData[idx].origin = defV.origin;
-          fleetData[idx].pilotRule = defV.pilotRule;
-        }
-      });
-      saveFleet();
-    }
-      saveFleet();
-    } else {
-      // 기존 템플릿 검색 선박(MI LAN, YC COSMOS 등)이 있으면 실제 공식 위성 제원으로 자동 동기화
-      defaultFleet.forEach(defV => {
         const idx = fleetData.findIndex(f => f.name.toUpperCase().trim() === defV.name.toUpperCase().trim() || f.id === defV.id);
         if (idx >= 0) {
           fleetData[idx] = Object.assign({}, fleetData[idx], defV);
