@@ -1059,6 +1059,66 @@
     }
 
     // ============================================================
+    // 속도 분석 및 감속 사유 진단 엔진 (진수 님의 피드백 반영!)
+    // 적정 순항속도(11~13노트) 대비 저속 운항 시 원인 설명 추가
+    // ============================================================
+    function formatSpeedAnalysis(vessel) {
+      const spd = typeof vessel.speed === 'number' ? vessel.speed : parseFloat(vessel.speed) || 0;
+      const normalSpeed = vessel.designSpeed || 12.0;
+
+      // 1. 투묘 정박 및 계류 (0.5노트 이하)
+      if (spd <= 0.5) {
+        if (vessel.dest && vessel.dest.eta && (vessel.dest.eta.includes('완료') || vessel.dest.eta.includes('접안'))) {
+          return `현재 속력은 <span class='highlight-cyan'>0.0노트</span>로 목적지 부두 선석에 <b>완전 계류(Moored)</b> 완료 상태입니다.
+            <div style="margin-top:6px;padding:6px 9px;background:rgba(6,182,212,0.12);border-left:3px solid #06b6d4;border-radius:4px;font-size:11.5px;color:#a5f3fc;line-height:1.45;">
+              ⚓ <b>선석 접안 완료:</b> 하역/선적 작업 진행 중이며 엔진 정지 및 계류삭 고정 상태입니다.
+            </div>`;
+        }
+        return `현재 속력은 <span class='highlight-cyan'>${spd.toFixed(1)}노트</span> (침로 <span class='highlight-blue'>${vessel.course || '대기'}</span>)입니다.
+          <div style="margin-top:6px;padding:6px 9px;background:rgba(6,182,212,0.12);border-left:3px solid #06b6d4;border-radius:4px;font-size:11.5px;color:#a5f3fc;line-height:1.45;">
+            ⚓ <b>외해 정박지 투묘 대기(At Anchor):</b> 목적지 항만 도선사 승선 및 선석 배정 순번 전까지 닻을 내리고 엔진 대기 상태를 유지 중입니다.
+          </div>`;
+      }
+
+      // 2. 적정 순항속도 대비 저속 운항 (0.5 < spd < 8.0노트)
+      if (spd < 8.0) {
+        let reasonText = "";
+        if (vessel.id === 'sunrise-sambu' || vessel.name.toUpperCase().includes('SUNRISE')) {
+          reasonText = "오늘 저녁 20시 여수 외해 도착 및 야간 도선 스케줄에 맞추기 위한 선석 대기 방지 감속 운항(Eco Steaming) 및 동중국해 해상 조류 조절로 분석됩니다.";
+        } else if (vessel.pilotRule && vessel.pilotRule.includes('8노트')) {
+          reasonText = "묘도수로 등 항만 연안 협수로 통항 안전속도 제한구역(8노트 이하) 진입에 따른 법정 감속 운항입니다.";
+        } else {
+          reasonText = `적정 순항속도(${normalSpeed}노트) 대비 저속 운항 중입니다. 목적지 항만의 선석 비움(Berth availability) 일정에 맞춘 경제 감속 항행(Eco Steaming) 또는 해상 너울·역조류 영향 가능성이 있습니다.`;
+        }
+
+        return `현재 속력은 <span class='highlight-cyan'>${spd.toFixed(1)}노트</span>, 침로는 <span class='highlight-blue'>${vessel.course || '순항'}</span>입니다.
+          <div style="margin-top:6px;padding:6px 9px;background:rgba(239,68,68,0.12);border-left:3px solid #ef4444;border-radius:4px;font-size:11.5px;color:#fca5a5;line-height:1.45;">
+            ⚠️ <b>적정 순항속도(${normalSpeed}노트) 대비 감속 운항 중:</b><br>${reasonText}
+          </div>`;
+      }
+
+      // 3. 경제 속도 운항 / 연안 감속 (8.0 <= spd < 10.5노트)
+      if (spd < 10.5) {
+        let ecoReason = "";
+        if (vessel.id === 'mi-lan' || vessel.name.toUpperCase().includes('MI LAN') || vessel.name.toUpperCase().includes('MILAN')) {
+          ecoReason = "보하이 해협 통항로 밀집 구간 통과 및 오늘 야간 20시 판진항 선적 터미널 입항 일정에 맞춘 경제 순항(Eco Steaming)입니다.";
+        } else if (vessel.id === 'pacific-sambu' || vessel.name.toUpperCase().includes('PACIFIC')) {
+          ecoReason = "오늘 심야 23:45 여수 도착 예정에 맞춰 야간 외해 대기 시간을 최소화하기 위한 경제 속도 조절 운항입니다.";
+        } else {
+          ecoReason = `적정 속도(${normalSpeed}노트) 대비 연료 소모 절감 및 입항 스케줄을 조율하는 경제 순항(Eco Speed) 구간입니다.`;
+        }
+
+        return `현재 속력은 <span class='highlight-cyan'>${spd.toFixed(1)}노트</span>, 침로는 <span class='highlight-blue'>${vessel.course || '순항'}</span>입니다.
+          <div style="margin-top:6px;padding:6px 9px;background:rgba(245,158,11,0.12);border-left:3px solid #f59e0b;border-radius:4px;font-size:11.5px;color:#fcd34d;line-height:1.45;">
+            💡 <b>경제 속도 운항(Eco Steaming):</b><br>${ecoReason}
+          </div>`;
+      }
+
+      // 4. 정상 순항 속도 (10.5노트 이상)
+      return `현재 속력은 <span class='highlight-cyan'>${spd.toFixed(1)}노트</span>, 침로는 <span class='highlight-blue'>${vessel.course || '순항'}</span>로 적정 순항 속도(${normalSpeed}노트 내외)를 유지하며 목적지를 향해 정상 운항 중입니다.`;
+    }
+
+    // ============================================================
     // 진수 님을 위한 동적 실시간 말풍선 브리핑 생성기
     // (5단계 표준 브리핑: 위치 ➡️ 속도/침로 ➡️ 화물/흘수 ➡️ 목적지ETA ➡️ 부두관제)
     // + 배에 따른 선택적 [⚓ 6. 여수 도착 여부 및 계획] 동적 분기!
@@ -1079,7 +1139,7 @@
           {
             tag: "⚡ 2. 현재 속도 및 침로",
             time: simpleTime + " 측정",
-            text: `현재 속력은 <span class='highlight-cyan'>${vessel.speed}노트</span>, 침로는 <span class='highlight-blue'>${vessel.course}</span>로 중국 랴오닝성 판진항(Panjin)을 향해 순항 중이에요.`
+            text: formatSpeedAnalysis(vessel)
           },
           {
             tag: "📦 3. 화물 및 흘수 상태",
@@ -1107,7 +1167,7 @@
           {
             tag: "⚡ 2. 현재 속도 및 침로",
             time: simpleTime + " 측정",
-            text: `현재 속력은 <span class='highlight-cyan'>${vessel.speed}노트</span>, 침로는 <span class='highlight-blue'>${vessel.course}</span>로 여수를 향해 안정적인 북상 항로를 유지하고 있습니다.`
+            text: formatSpeedAnalysis(vessel)
           },
           {
             tag: "📦 3. 화물 및 흘수 상태",
@@ -1135,7 +1195,7 @@
           {
             tag: "⚡ 2. 현재 속도 및 침로",
             time: simpleTime + " 측정",
-            text: `현재 속력은 <span class='highlight-cyan'>0.0~0.1노트</span>로 정박 중이며, 11/8 대산항을 출항해 여수 정박지에 안전하게 도착해 대기하고 있습니다.`
+            text: formatSpeedAnalysis(vessel)
           },
           {
             tag: "📦 3. 화물 및 흘수 상태",
@@ -1163,7 +1223,7 @@
           {
             tag: "⚡ 2. 현재 속도 및 침로",
             time: simpleTime + " 측정",
-            text: `현재 속력은 <span class='highlight-cyan'>${vessel.speed}노트</span>, 침로는 조류에 맞춰 <span class='highlight-blue'>${vessel.course}</span>로 대산항 입항 순번을 대기하고 있습니다.`
+            text: formatSpeedAnalysis(vessel)
           },
           {
             tag: "📦 3. 화물 및 흘수 상태",
@@ -1191,7 +1251,7 @@
           {
             tag: "⚡ 2. 현재 속도 및 침로",
             time: simpleTime + " 측정",
-            text: `현재 속력은 <span class='highlight-cyan'>${vessel.speed}노트</span>, 침로는 <span class='highlight-blue'>${vessel.course}</span>로 여수항 진입 회랑을 타고 순항 중이에요.`
+            text: formatSpeedAnalysis(vessel)
           },
           {
             tag: "📦 3. 화물 및 흘수 상태",
@@ -1219,7 +1279,7 @@
           {
             tag: "⚡ 2. 현재 속도 및 침로",
             time: simpleTime + " 측정",
-            text: `현재 속력은 <span class='highlight-cyan'>0.0노트</span>로 계류 완료 상태이며, 기상이나 해상 변동 없이 안정적으로 정박 중이에요.`
+            text: formatSpeedAnalysis(vessel)
           },
           {
             tag: "📦 3. 화물 및 흘수 상태",
@@ -1272,7 +1332,7 @@
           {
             tag: "⚡ 2. 현재 속도 및 침로",
             time: simpleTime + " 측정",
-            text: `현재 속력은 <span class='highlight-cyan'>${vessel.speed}노트</span>, 침로는 <span class='highlight-blue'>${vessel.course || '순항 중'}</span>로 <b>${originTitle}</b> ➡️ <b>${destTitle}</b> 항로를 이동하고 있어요.`
+            text: formatSpeedAnalysis(vessel)
           },
           {
             tag: "📦 3. 화물 및 흘수 상태",
