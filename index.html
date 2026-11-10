@@ -1409,23 +1409,20 @@
     });
     document.getElementById('btnSearchGo').addEventListener('click', executeSearch);
 
-    // [최신 갱신] 버튼 클릭 시: 애니메이션과 함께 최신 시각·좌표·브리핑 실시간 재계산 및 갱신!
+    // [최신 갱신] 버튼 클릭 시: 캐시를 깨고 서버에서 최신 배포 선박 데이터와 위성 좌표를 강제 새로고침!
     document.getElementById('btnRefresh').addEventListener('click', () => {
-      if (!currentVessel) return;
-
       const refreshBtn = document.getElementById('btnRefresh');
       refreshBtn.classList.add('spinning');
 
       const status = document.getElementById('yurinaStatus');
-      status.textContent = `${currentVessel.name} 실시간 AIS 위성 패킷 재동기화 중... 📡`;
+      if (currentVessel) {
+        localStorage.setItem('pickle_selected_vessel', currentVessel.id);
+        status.textContent = `${currentVessel.name} 최신 서버 데이터 및 위성 패킷 재동기화 중... 📡`;
+      }
 
       setTimeout(() => {
-        refreshBtn.classList.remove('spinning');
-        updateView();
-        const now = new Date();
-        const timeStr = now.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-        status.textContent = `${currentVessel.name} 최신 관제 데이터 갱신 완료 (${timeStr}) ✅`;
-      }, 400);
+        window.location.href = window.location.pathname + '?t=' + Date.now();
+      }, 350);
     });
 
     if ('caches' in window) {
