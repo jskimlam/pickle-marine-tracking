@@ -703,6 +703,35 @@
     // 기본 선박 원본 정의 (현실적인 해상 항로 곡선 웨이포인트 탑재)
     const defaultFleet = [
       {
+        id: "yc-cosmos",
+        name: "YC COSMOS",
+        imo: "9409364",
+        lat: 34.8743,
+        lon: 127.7942,
+        zoom: 8,
+        speed: 0.1,
+        course: "035° NNE (투묘 대기)",
+        draught: "7.0m (만재)",
+        cargo: "케미칼/석유제품 운반선 (5,631 DWT, 영창기업)",
+        origin: { name: "대산항", lat: 37.0080, lon: 126.4150, time: "11/8 출항" },
+        dest: { name: "여수/광양 석화부두", lat: 34.8450, lon: 127.7320, eta: "정박지 투묘 대기 중" },
+        pilotRule: "여수·광양 VTS 관제 하 도선사 승선 순번에 따라 부두 접안",
+        pastRoute: [
+          [37.0080, 126.4150],
+          [36.7500, 125.9500],
+          [36.2000, 125.8000],
+          [35.3000, 125.7000],
+          [34.3500, 125.9500],
+          [34.1800, 126.8000],
+          [34.4000, 127.4500],
+          [34.8743, 127.7942]
+        ],
+        futureRoute: [
+          [34.8743, 127.7942],
+          [34.8450, 127.7320]
+        ]
+      },
+      {
         id: "sunrise-sambu",
         name: "SUNRISE SAMBU",
         imo: "9288007",
@@ -865,21 +894,32 @@
       return points;
     }
 
-    // 로컬스토리지에서 사용자 선박 목록 로드 (v4: 해상 항로 곡선 지원)
+    // 로컬스토리지에서 사용자 선박 목록 로드 (v5: 공식 선박 데이터 자동 동기화)
     let fleetData = [];
     try {
-      const stored = localStorage.getItem('pickle_fleet_data_v4');
+      const stored = localStorage.getItem('pickle_fleet_data_v5');
       if (stored) fleetData = JSON.parse(stored);
     } catch (e) {}
 
     if (!fleetData || fleetData.length === 0) {
       fleetData = JSON.parse(JSON.stringify(defaultFleet));
       saveFleet();
+    } else {
+      // 기존 템플릿 검색 선박(YC COSMOS 등)이 있으면 실제 공식 위성 제원으로 자동 동기화
+      defaultFleet.forEach(defV => {
+        const idx = fleetData.findIndex(f => f.name.toUpperCase().trim() === defV.name.toUpperCase().trim() || f.id === defV.id);
+        if (idx >= 0) {
+          fleetData[idx] = Object.assign({}, fleetData[idx], defV);
+        } else {
+          fleetData.unshift(defV);
+        }
+      });
+      saveFleet();
     }
 
     function saveFleet() {
       try {
-        localStorage.setItem('pickle_fleet_data_v4', JSON.stringify(fleetData));
+        localStorage.setItem('pickle_fleet_data_v5', JSON.stringify(fleetData));
       } catch (e) {}
     }
 
@@ -921,7 +961,35 @@
       const simpleTime = now.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
 
       // 선박별 실시간 상황 문맥화
-      if (vessel.id === 'sunrise-sambu') {
+      if (vessel.id === 'yc-cosmos' || vessel.name.toUpperCase().includes('COSMOS')) {
+        return [
+          {
+            tag: "📍 1. 현재 위치",
+            time: simpleTime + " AIS 수신",
+            text: `진수 님! 지금 <b>${vessel.name}</b>호는 <span class='highlight-cyan'>북위 34.87°N, 동경 127.79°E</span> (광양/여수 외해 정박지)에 투묘 대기 중이에요 🚢`
+          },
+          {
+            tag: "⚡ 2. 현재 속도 및 상태",
+            time: simpleTime + " 측정",
+            text: `현재 속력은 <span class='highlight-cyan'>0.0~0.1노트</span>로 정박 중이며, 11/8 대산항을 출항해 어젯밤 여수 정박지에 안전하게 도착했습니다.`
+          },
+          {
+            tag: "📦 3. 화물 및 흘수 상태",
+            time: "만재 상태",
+            text: `<b>${vessel.cargo}</b> 제원이며, 현재 흘수는 <span class='highlight-amber'>${vessel.draught}</span>로 화물을 가득 채운 만재 상태로 대기하고 있어요.`
+          },
+          {
+            tag: "⏱️ 4. 여수 석화부두 접안 현황",
+            time: "접안 대기",
+            text: `여수/광양 외해 정박지에서 투묘 대기 중이며, 항만 하역 선석 배정 순번에 따라 접안 일정이 확정될 예정입니다.`
+          },
+          {
+            tag: "⚠️ 5. 통항 및 관제 수칙",
+            time: "해상 교통관제",
+            text: `여수·광양 VTS 관제 하에 도선사 승선 승인 대기 중이며, 접안 시간 배정 시 실시간으로 알려드릴게요!`
+          }
+        ];
+      } else if (vessel.id === 'sunrise-sambu') {
         return [
           {
             tag: "📍 1. 현재 위치",
