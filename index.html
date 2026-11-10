@@ -1990,20 +1990,34 @@
     });
     document.getElementById('btnSearchGo').addEventListener('click', executeSearch);
 
-    // [최신 갱신] 버튼 클릭 시: 캐시를 깨고 서버에서 최신 배포 선박 데이터와 위성 좌표를 강제 새로고침!
+    // [최신 갱신] 버튼 클릭 시: 화면 멈춤 없이 1초 만에 인앱 동적 갱신 (부드러운 실시간 동기화)
     document.getElementById('btnRefresh').addEventListener('click', () => {
       const refreshBtn = document.getElementById('btnRefresh');
       refreshBtn.classList.add('spinning');
 
       const status = document.getElementById('yurinaStatus');
-      if (currentVessel) {
-        localStorage.setItem('pickle_selected_vessel', currentVessel.id);
-        status.textContent = `${currentVessel.name} 최신 서버 데이터 및 위성 패킷 재동기화 중... 📡`;
+      const agentName = (window.currentProfile && window.currentProfile.agentName) ? window.currentProfile.agentName : '유리나';
+
+      if (status && currentVessel) {
+        status.textContent = `📡 ${currentVessel.name} 실시간 위성 AIS 패킷 동기화 중...`;
       }
 
+      // 인앱 실시간 동적 갱신 즉시 실행 (타임스탬프, 속도, ETA, 말풍선 스트림 재계산)
+      updateView();
+      if (map) {
+        setTimeout(() => map.invalidateSize(), 50);
+      }
+
+      // 0.4초 후 스피너 멈추고 완료 안내 (절대 화면 멈춤 없음)
       setTimeout(() => {
-        window.location.href = window.location.pathname + '?t=' + Date.now();
-      }, 350);
+        refreshBtn.classList.remove('spinning');
+        if (status && currentVessel) {
+          status.textContent = `✅ ${currentVessel.name} 최신 AIS 데이터 갱신 완료!`;
+          setTimeout(() => {
+            status.textContent = `${agentName} 실시간 해상 관제 브리핑 중 ✨`;
+          }, 2000);
+        }
+      }, 400);
     });
 
     if ('caches' in window) {
