@@ -1082,6 +1082,13 @@
         id: "sunrise-sambu",
         name: "SUNRISE SAMBU",
         imo: "9288007",
+        baseFix: {
+          time: "2026-11-11T03:22:00+09:00",
+          lat: 31.5925,
+          lon: 124.6031,
+          speed: 8.3,
+          course: "013° NNE"
+        },
         lat: 31.9800,
         lon: 124.7100,
         zoom: 6,
@@ -1090,7 +1097,7 @@
         draught: "6.4m",
         cargo: "스타이렌모노머(SM) 만재",
         origin: { name: "대만 안핑항", lat: 22.9900, lon: 120.1500, time: "11/7 출항" },
-        dest: { name: "여수 중흥부두", lat: 34.8428, lon: 127.6750, eta: "11/12(목) 오전 입항 예정 (외해 ~220해리)" },
+        dest: { name: "여수 중흥부두", lat: 34.8428, lon: 127.6750, eta: "11/12(목) 오전 입항 예정" },
         pilotRule: "묘도수로 단독통항(교행 금지) 및 8노트 속도 제한",
         yeosuInbound: true,
         pastRoute: [
@@ -1101,11 +1108,11 @@
           [29.3373, 123.2278],
           [29.8735, 123.5449],
           [30.7000, 124.1000],
-          [31.5925, 124.6031],
-          [31.9800, 124.7100]
+          [31.5925, 124.6031]
         ],
         futureRoute: [
-          [31.9800, 124.7100],
+          [31.5925, 124.6031],
+          [32.2000, 124.9000],
           [32.8000, 125.8000],
           [34.1000, 127.3500],
           [34.6500, 127.8800], // 돌산도 외해
@@ -1273,10 +1280,78 @@
       return points;
     }
 
-    // 로컬스토리지에서 사용자 선박 목록 로드 (v9: SUNRISE SAMBU 동중국해 북부 31.98°N 북상 및 MI LAN 판진 외해 투묘 최신 위성 좌표 반영)
+    // 해상 두 지점 간 거리(해리, NM) 계산
+    function calculateNmDistance(lat1, lon1, lat2, lon2) {
+      const R = 3440.065;
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLon = (lon2 - lon1) * Math.PI / 180;
+      const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                Math.sin(dLon / 2) * Math.sin(dLon / 2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      return R * c;
+    }
+
+    // [핵심] 해운 관제 실시간 추측항법 (Dead Reckoning, DR) 연산 엔진
+    // 갱신 버튼을 누를 때마다 위성 실측 시각 대비 경과 시간과 속도(노트)를 곱해 배를 항로 위에서 실제 위치로 실시간 전진 계산
+    function applyDeadReckoning(vessel) {
+      if (!vessel || !vessel.baseFix || !vessel.speed || vessel.speed <= 0.5 || !vessel.futureRoute || vessel.futureRoute.length < 2) return;
+
+      const fixTime = new Date(vessel.baseFix.time).getTime();
+      const now = Date.now();
+      const elapsedHours = (now - fixTime) / (1000 * 3600);
+      if (elapsedHours <= 0) return;
+
+      const totalAdvanceNm = vessel.speed * elapsedHours;
+      const waypoints = vessel.futureRoute;
+      let accumulatedNm = 0;
+      let currentLat = waypoints[0][0];
+      let currentLon = waypoints[0][1];
+      let reachedIndex = 0;
+
+      for (let i = 0; i < waypoints.length - 1; i++) {
+        const segDist = calculateNmDistance(waypoints[i][0], waypoints[i + 1][0], waypoints[i][1], waypoints[i + 1][1]);
+        if (accumulatedNm + segDist >= totalAdvanceNm) {
+          const remainInSeg = totalAdvanceNm - accumulatedNm;
+          const ratio = segDist > 0 ? remainInSeg / segDist : 0;
+          currentLat = waypoints[i][0] + (waypoints[i + 1][0] - waypoints[i][0]) * ratio;
+          currentLon = waypoints[i][1] + (waypoints[i + 1][1] - waypoints[i][1]) * ratio;
+          reachedIndex = i;
+          break;
+        } else {
+          accumulatedNm += segDist;
+          currentLat = waypoints[i + 1][0];
+          currentLon = waypoints[i + 1][1];
+          reachedIndex = i + 1;
+        }
+      }
+
+      vessel.lat = currentLat;
+      vessel.lon = currentLon;
+      vessel.drActive = true;
+      vessel.drElapsedHours = elapsedHours.toFixed(1);
+
+      // 잔여 거리 계산 (current -> dest)
+      let remainNm = calculateNmDistance(currentLat, currentLon, waypoints[reachedIndex + 1] ? waypoints[reachedIndex + 1][0] : vessel.dest.lat, waypoints[reachedIndex + 1] ? waypoints[reachedIndex + 1][1] : vessel.dest.lon);
+      for (let j = reachedIndex + 1; j < waypoints.length - 1; j++) {
+        remainNm += calculateNmDistance(waypoints[j][0], waypoints[j + 1][0], waypoints[j][1], waypoints[j + 1][1]);
+      }
+      vessel.remainingNm = Math.round(remainNm);
+
+      const remainHours = vessel.speed > 0 ? remainNm / vessel.speed : 0;
+      const etaDate = new Date(now + remainHours * 3600 * 1000);
+      const etaMonth = etaDate.getMonth() + 1;
+      const etaDay = etaDate.getDate();
+      const etaHour = String(etaDate.getHours()).padStart(2, '0');
+      const etaMin = String(etaDate.getMinutes()).padStart(2, '0');
+      const dayName = ['일', '월', '화', '수', '목', '금', '토'][etaDate.getDay()];
+      vessel.computedEta = `${etaMonth}/${etaDay}(${dayName}) ${etaHour}:${etaMin} KST`;
+    }
+
+    // 로컬스토리지에서 사용자 선박 목록 로드 (v10: 실시간 해상 추측항법 Dead Reckoning 엔진 탑재)
     let fleetData = [];
     try {
-      const stored = localStorage.getItem('pickle_fleet_data_v9');
+      const stored = localStorage.getItem('pickle_fleet_data_v10');
       if (stored) fleetData = JSON.parse(stored);
     } catch (e) {}
 
@@ -1298,7 +1373,7 @@
 
     function saveFleet() {
       try {
-        localStorage.setItem('pickle_fleet_data_v9', JSON.stringify(fleetData));
+        localStorage.setItem('pickle_fleet_data_v10', JSON.stringify(fleetData));
       } catch (e) {}
     }
 
@@ -1431,11 +1506,12 @@
           }
         );
       } else if (vessel.id === 'sunrise-sambu' || vessel.name.toUpperCase().includes('SUNRISE')) {
+        const drNote = vessel.drActive ? ` <span style='font-size:11px; opacity:0.85; display:block; margin-top:4px;'>🛰️ 위성 실측(03:22) 기반 실시간 항해 추측항법(DR) 연산 좌표 · 잔여 ${vessel.remainingNm || 220}해리</span>` : '';
         briefings.push(
           {
             tag: "📍 1. 현재 위치",
             time: simpleTime + " AIS 수신",
-            text: `${uName}! 지금 <b>${vessel.name}</b>호는 <span class='highlight-cyan'>북위 ${vessel.lat.toFixed(2)}°N, 동경 ${vessel.lon.toFixed(2)}°E</span> (동중국해 북부 해상, 상하이 북동쪽 약 190km · 제주도 남서방)를 통과해 여수로 북상 중입니다 🚢`
+            text: `${uName}! 지금 <b>${vessel.name}</b>호는 <span class='highlight-cyan'>북위 ${vessel.lat.toFixed(2)}°N, 동경 ${vessel.lon.toFixed(2)}°E</span> (동중국해 북부 해상, 상하이 북동쪽 약 190km · 제주도 남서방)를 통과해 여수로 북상 중입니다 🚢${drNote}`
           },
           {
             tag: "⚡ 2. 현재 속도 및 침로",
@@ -1449,8 +1525,8 @@
           },
           {
             tag: "⏱️ 4. 여수 중흥부두 도착 예정일 (ETA)",
-            time: "실시간 예측",
-            text: `여수 외해 도착 예정 시간은 <span class='highlight-amber'>${vessel.dest.eta}</span>입니다. 여수 외해 도선점까지 잔여 거리는 약 220해리로 전체 항로의 <span class='highlight-cyan'>78%</span>를 통과했습니다.`
+            time: "실시간 연산",
+            text: `여수 외해 도착 예정 시간은 <span class='highlight-amber'>${vessel.computedEta || vessel.dest.eta}</span>입니다. 여수 외해 도선점까지 잔여 거리는 약 <span class='highlight-cyan'>${vessel.remainingNm || 220}해리</span>로 순항 중입니다.`
           },
           {
             tag: "⚠️ 5. 중흥부두 접안 및 통항 조건",
@@ -1658,6 +1734,9 @@
         renderEmptyState();
         return;
       }
+
+      // [실시간 추측항법 적용] 갱신 시마다 현재 시각 기준으로 선박 실시간 위치 전진 연산!
+      applyDeadReckoning(currentVessel);
 
       localStorage.setItem('pickle_selected_vessel', currentVessel.id);
 
