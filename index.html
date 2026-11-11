@@ -1083,19 +1083,19 @@
         name: "SUNRISE SAMBU",
         imo: "9288007",
         baseFix: {
-          time: "2026-11-11T03:22:00+09:00",
-          lat: 31.5925,
-          lon: 124.6031,
-          speed: 8.3,
-          course: "013° NNE"
+          time: "2026-11-11T11:29:00+09:00",
+          lat: 32.4713,
+          lon: 125.4240,
+          speed: 10.6,
+          course: "052° NE"
         },
-        lat: 31.9800,
-        lon: 124.7100,
+        lat: 32.4713,
+        lon: 125.4240,
         zoom: 6,
-        speed: 8.3,
-        course: "013° NNE (북북동)",
-        draught: "6.4m",
-        cargo: "스타이렌모노머(SM) 만재",
+        speed: 10.6,
+        course: "052° NE (북동진, 쾌속 항해)",
+        draught: "4.8m",
+        cargo: "스타이렌모노머(SM) 운반선",
         origin: { name: "대만 안핑항", lat: 22.9900, lon: 120.1500, time: "11/7 출항" },
         dest: { name: "여수 중흥부두", lat: 34.8428, lon: 127.6750, eta: "11/12(목) 오전 입항 예정" },
         pilotRule: "묘도수로 단독통항(교행 금지) 및 8노트 속도 제한",
@@ -1108,11 +1108,11 @@
           [29.3373, 123.2278],
           [29.8735, 123.5449],
           [30.7000, 124.1000],
-          [31.5925, 124.6031]
+          [31.5925, 124.6031],
+          [32.4713, 125.4240]
         ],
         futureRoute: [
-          [31.5925, 124.6031],
-          [32.2000, 124.9000],
+          [32.4713, 125.4240],
           [32.8000, 125.8000],
           [34.1000, 127.3500],
           [34.6500, 127.8800], // 돌산도 외해
@@ -1351,6 +1351,7 @@
       vessel.computedEta = `${etaMonth}/${etaDay}(${dayName}) ${etaHour}:${etaMin} KST`;
     }
 
+<<<<<<< HEAD
     // 서버/저장 데이터는 검증한 뒤 적용한다. 기본값은 최초 실행용이며 최신 데이터를 덮지 않는다.
     function isValidFleetVessel(vessel) {
       const hasText = value => typeof value === 'string' && value.trim().length > 0;
@@ -1369,10 +1370,10 @@
         (!vessel.baseFix || (validPosition(vessel.baseFix) && Number.isFinite(Date.parse(vessel.baseFix.time)))));
     }
 
-    // 재실행·오프라인에서도 마지막으로 정상 수신한 선박 데이터 유지
+    // 재실행·오프라인에서도 마지막으로 정상 수신한 선박 데이터 유지 (v11)
     let fleetData = [];
     try {
-      const stored = JSON.parse(localStorage.getItem('pickle_fleet_data_v10'));
+      const stored = JSON.parse(localStorage.getItem('pickle_fleet_data_v11'));
       if (Array.isArray(stored) && stored.every(isValidFleetVessel)) fleetData = stored;
     } catch (e) {}
 
@@ -1383,7 +1384,7 @@
 
     function saveFleet() {
       try {
-        localStorage.setItem('pickle_fleet_data_v10', JSON.stringify(fleetData));
+        localStorage.setItem('pickle_fleet_data_v11', JSON.stringify(fleetData));
       } catch (e) {}
     }
 
