@@ -6,6 +6,7 @@ const path = require('node:path');
 
 const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
 const script = html.match(/<script>([\s\S]*?)<\/script>/)[1];
+const fleetStorageKey = script.match(/localStorage\.getItem\('(pickle_fleet_data_v\d+)'\)/)[1];
 const data = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'fleet.json'), 'utf8'));
 const clone = value => JSON.parse(JSON.stringify(value));
 const vessel = () => clone(data.find(v => v.id === 'mi-lan'));
@@ -14,7 +15,7 @@ const response = body => ({ ok: true, json: async () => clone(body) });
 // Execute the shipping inline source, not a separate copy of its implementation.
 function setup({ stored, selected = 'mi-lan', fetch = async () => response(data) } = {}) {
   const storage = new Map();
-  if (stored !== undefined) storage.set('pickle_fleet_data_v10', JSON.stringify(stored));
+  if (stored !== undefined) storage.set(fleetStorageKey, JSON.stringify(stored));
   storage.set('pickle_selected_vessel', selected);
   const handlers = new Map();
   const classes = new Set();
@@ -57,6 +58,10 @@ function setup({ stored, selected = 'mi-lan', fetch = async () => response(data)
   };
 }
 
+test('shipping HTML contains no unresolved merge conflict markers', () => {
+  assert.doesNotMatch(html, /^(?:<{7}|={7}|>{7})(?:\s|$)/m);
+});
+
 test('shipping JavaScript parses and shipped fleet passes validation', () => {
   new vm.Script(script);
   const app = setup();
@@ -72,7 +77,7 @@ test('refresh keeps server coordinates, speed, route and ETA instead of bundled 
   await app.click();
   app.finishTimers();
   assert.deepEqual(app.state().currentVessel, remote);
-  assert.deepEqual(JSON.parse(app.storage.get('pickle_fleet_data_v10'))[0], remote);
+  assert.deepEqual(JSON.parse(app.storage.get(fleetStorageKey))[0], remote);
   assert.match(app.status.textContent, /동기화 완료/);
   assert.equal(app.renders(), 1);
   assert.equal(app.button.disabled, false);
