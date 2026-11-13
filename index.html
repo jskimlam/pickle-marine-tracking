@@ -1009,7 +1009,7 @@
     "name": "SUNRISE SAMBU",
     "imo": "9288007",
     "baseFix": {
-      "time": "2026-11-13T18:00:00+09:00",
+      "time": "2026-11-14T06:05:00+09:00",
       "lat": 34.8428,
       "lon": 127.675,
       "speed": 0.0,
@@ -1032,7 +1032,7 @@
       "name": "여수 중흥부두",
       "lat": 34.8428,
       "lon": 127.675,
-      "eta": "11/12(목) 08:56 여수 중흥부두 접안 완료 (하역 작업 진행 중)"
+      "eta": "11/12(목) 08:56 여수 중흥부두 접안 완료 (하역 완료 후 출항 준비)"
     },
     "pilotRule": "묘도수로 통항 완료 및 중흥부두 선석 계류",
     "yeosuInbound": true,
@@ -1130,7 +1130,7 @@
     "name": "MI LAN",
     "imo": "9342047",
     "baseFix": {
-      "time": "2026-11-13T18:00:00+09:00",
+      "time": "2026-11-14T06:00:00+09:00",
       "lat": 40.7358,
       "lon": 121.9983,
       "speed": 0.0,
@@ -1235,7 +1235,7 @@
     "name": "YC COSMOS",
     "imo": "9409364",
     "baseFix": {
-      "time": "2026-11-13T18:05:00+09:00",
+      "time": "2026-11-14T06:05:00+09:00",
       "lat": 34.7743,
       "lon": 127.7894,
       "speed": 0.0,
@@ -1340,17 +1340,17 @@
     "name": "PACIFIC SAMBU",
     "imo": "9354129",
     "baseFix": {
-      "time": "2026-11-13T18:10:00+09:00",
-      "lat": 33.1805,
-      "lon": 133.917,
-      "speed": 11.5,
-      "course": "257° WSW"
+      "time": "2026-11-14T06:10:00+09:00",
+      "lat": 34.6215,
+      "lon": 129.654,
+      "speed": 11.3,
+      "course": "338° NNW"
     },
-    "lat": 33.1805,
-    "lon": 133.917,
-    "zoom": 7,
-    "speed": 11.5,
-    "course": "257° WSW (시코쿠 무로토곶 남방 외해 통과, 울산행 순항)",
+    "lat": 34.6215,
+    "lon": 129.654,
+    "zoom": 8,
+    "speed": 11.3,
+    "course": "338° NNW (대한해협 대마도 동방 외해 통과, 울산항 진입 접근 중)",
     "draught": "3.8m",
     "cargo": "케미칼/석유제품 운반선 (공선 복귀)",
     "origin": {
@@ -1365,7 +1365,7 @@
       "lon": 129.36,
       "eta": "11/14(토) 11:00 울산항 도착 예정"
     },
-    "pilotRule": "울산항 VTS 관제 및 원료 적하 선석 배정 대기",
+    "pilotRule": "울산항 VTS 관제 진입 및 온산/울산 도선구 접근 대기",
     "yeosuInbound": false,
     "pastRoute": [
       [
@@ -1411,24 +1411,32 @@
       [
         33.1805,
         133.917
+      ],
+      [
+        32.85,
+        132.48
+      ],
+      [
+        33.22,
+        131.25
+      ],
+      [
+        33.95,
+        130.35
+      ],
+      [
+        34.6215,
+        129.654
       ]
     ],
     "futureRoute": [
       [
-        33.1805,
-        133.917
+        34.6215,
+        129.654
       ],
       [
-        33.0,
-        133.0
-      ],
-      [
-        33.4,
-        130.8
-      ],
-      [
-        34.4,
-        129.5
+        35.1,
+        129.48
       ],
       [
         35.44,
@@ -1441,7 +1449,7 @@
     "name": "TN IDUN",
     "imo": "9244879",
     "baseFix": {
-      "time": "2026-11-13T18:05:00+09:00",
+      "time": "2026-11-14T06:05:00+09:00",
       "lat": 34.7621,
       "lon": 127.8085,
       "speed": 0.0,
@@ -1679,7 +1687,7 @@
     // 재실행·오프라인에서도 마지막으로 정상 수신한 선박 데이터 유지 (v11)
     let fleetData = [];
     try {
-      const stored = JSON.parse(localStorage.getItem('pickle_fleet_data_v18'));
+      const stored = JSON.parse(localStorage.getItem('pickle_fleet_data_v19'));
       if (Array.isArray(stored) && stored.every(isValidFleetVessel)) fleetData = stored;
     } catch (e) {}
 
@@ -1690,7 +1698,7 @@
 
     function saveFleet() {
       try {
-        localStorage.setItem('pickle_fleet_data_v18', JSON.stringify(fleetData));
+        localStorage.setItem('pickle_fleet_data_v19', JSON.stringify(fleetData));
       } catch (e) {}
     }
 
