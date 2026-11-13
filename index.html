@@ -1009,7 +1009,7 @@
     "name": "SUNRISE SAMBU",
     "imo": "9288007",
     "baseFix": {
-      "time": "2026-11-13T12:00:00+09:00",
+      "time": "2026-11-13T18:00:00+09:00",
       "lat": 34.8428,
       "lon": 127.675,
       "speed": 0.0,
@@ -1019,8 +1019,8 @@
     "lon": 127.675,
     "zoom": 12,
     "speed": 0.0,
-    "course": "계류 완료 (여수 중흥부두 선석 접안 하역 진행 중)",
-    "draught": "5.8m",
+    "course": "계류 완료 (여수 중흥부두 선석 하역 완료, 출항 준비 점검)",
+    "draught": "4.6m (하역 완료)",
     "cargo": "스타이렌모노머(SM) 운반선",
     "origin": {
       "name": "대만 안핑항",
@@ -1130,7 +1130,7 @@
     "name": "MI LAN",
     "imo": "9342047",
     "baseFix": {
-      "time": "2026-11-13T11:50:00+09:00",
+      "time": "2026-11-13T18:00:00+09:00",
       "lat": 40.7358,
       "lon": 121.9983,
       "speed": 0.0,
@@ -1235,7 +1235,7 @@
     "name": "YC COSMOS",
     "imo": "9409364",
     "baseFix": {
-      "time": "2026-11-13T11:55:00+09:00",
+      "time": "2026-11-13T18:05:00+09:00",
       "lat": 34.7743,
       "lon": 127.7894,
       "speed": 0.0,
@@ -1340,17 +1340,17 @@
     "name": "PACIFIC SAMBU",
     "imo": "9354129",
     "baseFix": {
-      "time": "2026-11-13T12:05:00+09:00",
-      "lat": 33.451,
-      "lon": 135.2915,
+      "time": "2026-11-13T18:10:00+09:00",
+      "lat": 33.1805,
+      "lon": 133.917,
       "speed": 11.5,
-      "course": "277° W"
+      "course": "257° WSW"
     },
-    "lat": 33.451,
-    "lon": 135.2915,
+    "lat": 33.1805,
+    "lon": 133.917,
     "zoom": 7,
     "speed": 11.5,
-    "course": "277° W (와카야마 남방 기이수도 외해 통과, 울산행 순항)",
+    "course": "257° WSW (시코쿠 무로토곶 남방 외해 통과, 울산행 순항)",
     "draught": "3.8m",
     "cargo": "케미칼/석유제품 운반선 (공선 복귀)",
     "origin": {
@@ -1407,12 +1407,16 @@
       [
         33.451,
         135.2915
+      ],
+      [
+        33.1805,
+        133.917
       ]
     ],
     "futureRoute": [
       [
-        33.451,
-        135.2915
+        33.1805,
+        133.917
       ],
       [
         33.0,
@@ -1437,7 +1441,7 @@
     "name": "TN IDUN",
     "imo": "9244879",
     "baseFix": {
-      "time": "2026-11-13T12:00:00+09:00",
+      "time": "2026-11-13T18:05:00+09:00",
       "lat": 34.7621,
       "lon": 127.8085,
       "speed": 0.0,
@@ -1447,7 +1451,7 @@
     "lon": 127.8085,
     "zoom": 9,
     "speed": 0.0,
-    "course": "0° (여수 외해 정박지 W-1 투묘 대기, At anchor)",
+    "course": "0° (여수 외해 정박지 W-1 투묘 대기, 선석 교대 준비)",
     "draught": "5.2m",
     "cargo": "케미칼/석유제품 운반선",
     "origin": {
@@ -1675,7 +1679,7 @@
     // 재실행·오프라인에서도 마지막으로 정상 수신한 선박 데이터 유지 (v11)
     let fleetData = [];
     try {
-      const stored = JSON.parse(localStorage.getItem('pickle_fleet_data_v17'));
+      const stored = JSON.parse(localStorage.getItem('pickle_fleet_data_v18'));
       if (Array.isArray(stored) && stored.every(isValidFleetVessel)) fleetData = stored;
     } catch (e) {}
 
@@ -1686,7 +1690,7 @@
 
     function saveFleet() {
       try {
-        localStorage.setItem('pickle_fleet_data_v17', JSON.stringify(fleetData));
+        localStorage.setItem('pickle_fleet_data_v18', JSON.stringify(fleetData));
       } catch (e) {}
     }
 
