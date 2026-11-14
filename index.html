@@ -1009,7 +1009,7 @@
     "name": "SUNRISE SAMBU",
     "imo": "9288007",
     "baseFix": {
-      "time": "2026-11-14T12:05:00+09:00",
+      "time": "2026-11-14T18:05:00+09:00",
       "lat": 34.8428,
       "lon": 127.675,
       "speed": 0.0,
@@ -1130,7 +1130,7 @@
     "name": "MI LAN",
     "imo": "9342047",
     "baseFix": {
-      "time": "2026-11-14T12:00:00+09:00",
+      "time": "2026-11-14T18:00:00+09:00",
       "lat": 40.7358,
       "lon": 121.9983,
       "speed": 0.0,
@@ -1235,7 +1235,7 @@
     "name": "YC COSMOS",
     "imo": "9409364",
     "baseFix": {
-      "time": "2026-11-14T12:05:00+09:00",
+      "time": "2026-11-14T18:05:00+09:00",
       "lat": 34.7743,
       "lon": 127.7894,
       "speed": 0.0,
@@ -1340,7 +1340,7 @@
     "name": "PACIFIC SAMBU",
     "imo": "9354129",
     "baseFix": {
-      "time": "2026-11-14T12:10:00+09:00",
+      "time": "2026-11-14T18:10:00+09:00",
       "lat": 35.4402,
       "lon": 129.362,
       "speed": 0.0,
@@ -1449,7 +1449,7 @@
     "name": "TN IDUN",
     "imo": "9244879",
     "baseFix": {
-      "time": "2026-11-14T12:05:00+09:00",
+      "time": "2026-11-14T18:05:00+09:00",
       "lat": 34.7621,
       "lon": 127.8085,
       "speed": 0.0,
@@ -1687,7 +1687,7 @@
     // 재실행·오프라인에서도 마지막으로 정상 수신한 선박 데이터 유지 (v11)
     let fleetData = [];
     try {
-      const stored = JSON.parse(localStorage.getItem('pickle_fleet_data_v20'));
+      const stored = JSON.parse(localStorage.getItem('pickle_fleet_data_v21'));
       if (Array.isArray(stored) && stored.every(isValidFleetVessel)) fleetData = stored;
     } catch (e) {}
 
@@ -1698,7 +1698,7 @@
 
     function saveFleet() {
       try {
-        localStorage.setItem('pickle_fleet_data_v20', JSON.stringify(fleetData));
+        localStorage.setItem('pickle_fleet_data_v21', JSON.stringify(fleetData));
       } catch (e) {}
     }
 
