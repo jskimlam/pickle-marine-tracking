@@ -394,11 +394,11 @@
       background: #0d121c;
     }
 
-    /* 지도 상단 오버레이 정보창 */
+    /* 지도 상단 오버레이 정보창 (Leaflet 줌 버튼과 겹치지 않게 오른쪽으로 비켜 배치) */
     .map-tag-overlay {
       position: absolute;
       top: 12px;
-      left: 12px;
+      left: 54px;
       z-index: 800;
       background: rgba(11, 14, 20, 0.92);
       backdrop-filter: blur(8px);
@@ -1338,10 +1338,13 @@
     }
 
     function updateView() {
+      const closeBtn = document.getElementById('btnCloseVessel');
       if (!currentVessel) {
+        if (closeBtn) closeBtn.style.display = 'none';
         renderEmptyState();
         return;
       }
+      if (closeBtn) closeBtn.style.display = '';
 
       // [실시간 추측항법 적용] 갱신 시마다 현재 시각 기준으로 선박 실시간 위치 전진 연산!
       applyDeadReckoning(currentVessel);
@@ -1502,6 +1505,7 @@
           <div style="font-size:32px;">⚓</div>
           <div><b>현재 관제 중인 선박이 모두 정리되었습니다!</b></div>
           <div style="font-size:12.5px;">상단 검색창에서 배 이름이나 IMO 번호를 검색하여 새 선박을 추가해 주세요.</div>
+          <div style="font-size:12.5px;">관제할 배를 알려 주시면 위성 AIS로 조회해서 앱에 바로 등록해 드려요.</div>
           ${hasDefaults ? '<button class="btn-restore-fleet" id="btnRestoreFleet">🔄 기본 선박 목록 복원하기</button>' : ''}
         </div>
       `;
