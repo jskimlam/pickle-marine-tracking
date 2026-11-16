@@ -1,5 +1,5 @@
 {
-  "version": 26,
-  "updatedAt": "2026-11-16T12:15:00+09:00",
-  "note": "MI LAN anchored at Yeosu anchorage since 06:37 KST waiting for berth (34.7208N), SUNRISE SAMBU sailed Dalian 11:33 KST bound Ulsan (38.9331N), YC COSMOS arrived Ningbo Beilun 11:08 KST (29.9328N), PACIFIC SAMBU 11.8kn toward Kaohsiung off Jeju (33.7792N), TN IDUN sailed Onsan 11:21 KST via Busan to Yeosu (35.4097N)"
+  "version": 27,
+  "updatedAt": "2026-11-16T13:12:00+09:00",
+  "note": "기본 선박 목록을 빈 배열로 정리(v27). 진수 님이 앱에서 SUNRISE SAMBU·MI LAN·YC COSMOS·PACIFIC SAMBU·TN IDUN 5척을 모두 삭제했고, 깃허브 원본(fleet.json)과 index.html의 defaultFleet도 빈 목록으로 일치시킴. 새 선박은 톡으로 요청하면 위성 AIS 조회 후 fleet.json에 등록해 배포한다."
 }

@@ -8,12 +8,14 @@ const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
 const script = html.match(/<script>([\s\S]*?)<\/script>/)[1];
 const fleetStorageKey = script.match(/localStorage\.getItem\('(pickle_fleet_data_v\d+)'\)/)[1];
 const data = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'fleet.json'), 'utf8'));
+// v27: 배포 원본(fleet.json)은 빈 목록이므로, 동기화 규칙 검증에는 고정 샘플 선박을 쓴다.
+const sample = JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures', 'sample-vessel.json'), 'utf8'));
 const clone = value => JSON.parse(JSON.stringify(value));
-const vessel = () => clone(data.find(v => v.id === 'mi-lan'));
+const vessel = () => clone(sample);
 const response = body => ({ ok: true, json: async () => clone(body) });
 
 // Execute the shipping inline source, not a separate copy of its implementation.
-function setup({ stored, selected = 'mi-lan', fetch = async () => response(data) } = {}) {
+function setup({ stored, selected = 'mi-lan', fetch = async () => response(data), defaultFleet = [vessel()] } = {}) {
   const storage = new Map();
   if (stored !== undefined) storage.set(fleetStorageKey, JSON.stringify(stored));
   storage.set('pickle_selected_vessel', selected);
@@ -32,7 +34,7 @@ function setup({ stored, selected = 'mi-lan', fetch = async () => response(data)
   let renders = 0;
   let views = 0;
   const context = vm.createContext({
-    defaultFleet: [vessel()],
+    defaultFleet,
     localStorage: { getItem: k => storage.get(k) ?? null, setItem: (k, v) => storage.set(k, v) },
     document: { getElementById: id => id === 'btnRefresh' ? button : status },
     window: {}, map: null, AbortController, fetch,
@@ -65,7 +67,7 @@ test('shipping HTML contains no unresolved merge conflict markers', () => {
 test('shipping JavaScript parses and shipped fleet passes validation', () => {
   new vm.Script(script);
   const app = setup();
-  for (const v of data) {
+  for (const v of [...data, sample]) {
     app.context.record = v;
     assert.equal(vm.runInContext('isValidFleetVessel(record)', app.context), true, v.id);
   }
@@ -101,7 +103,7 @@ test('custom vessels and current selection survive server updates and added vess
   const app = setup({ stored: [vessel(), custom], selected: custom.id });
   await app.click();
   assert.deepEqual(app.state().currentVessel, custom);
-  assert.equal(app.state().fleetData.length, data.length + 1);
+  assert.equal(app.state().fleetData.length, 2);
   assert.equal(app.renders(), 1);
 });
 
@@ -125,7 +127,6 @@ test('server record replaces old DR state when no new base fix is supplied', asy
 for (const [name, fetch] of [
   ['HTTP failure', async () => ({ ok: false, status: 503 })],
   ['invalid JSON', async () => ({ ok: true, json: async () => { throw new SyntaxError('bad JSON'); } })],
-  ['empty data', async () => response([])],
   ['non-array data', async () => response({ error: 'not a fleet' })],
   ['invalid record after valid record', async () => response([{ ...vessel(), lat: 39.1 }, { id: 'broken' }])],
   ['invalid coordinates', async () => response([{ ...vessel(), lat: 999 }])],
@@ -147,6 +148,31 @@ for (const [name, fetch] of [
     assert.equal(app.attributes.has('aria-busy'), false);
   });
 }
+
+test('empty fleet.json is a valid empty state, not a failure', async () => {
+  const app = setup({ fetch: async () => response([]) });
+  await app.click();
+  app.finishTimers();
+  assert.deepEqual(app.state(), { fleetData: [], currentVessel: null });
+  assert.match(app.status.textContent, /동기화 완료/);
+  assert.doesNotMatch(app.status.textContent, /갱신하지 못했습니다/);
+  assert.equal(app.button.disabled, false);
+});
+
+test('empty server fleet keeps vessels the user added locally', async () => {
+  const custom = { ...vessel(), id: 'custom-1', imo: '1234567', name: 'MY SHIP' };
+  const app = setup({ stored: [custom], selected: custom.id, fetch: async () => response([]) });
+  await app.click();
+  assert.deepEqual(app.state().fleetData, [custom]);
+  assert.equal(app.state().currentVessel.id, custom.id);
+  assert.match(app.status.textContent, /동기화 완료/);
+});
+
+test('fresh install with an empty default fleet starts empty instead of crashing', () => {
+  const app = setup({ defaultFleet: [] });
+  assert.deepEqual(app.state(), { fleetData: [], currentVessel: null });
+  assert.equal(JSON.parse(app.storage.get(fleetStorageKey)).length, 0);
+});
 
 test('startup and repeated refresh clicks share one in-flight request', async () => {
   let resolve;
@@ -192,7 +218,7 @@ test('corrupt stored data cannot crash startup', () => {
 test('all named vessel briefings use the actual record coordinates', () => {
   const context = vm.createContext({ window: {} });
   vm.runInContext(script.slice(script.indexOf('function formatSpeedAnalysis'), script.indexOf('function updateView()')), context);
-  for (const record of [...data, { ...vessel(), id: 'grace-sambu', name: 'GRACE SAMBU' }]) {
+  for (const record of [sample, { ...vessel(), id: 'grace-sambu', name: 'GRACE SAMBU' }]) {
     context.vessel = { ...record, lat: 38.1234, lon: 125.5678 };
     const text = vm.runInContext('generateDynamicBriefing(vessel)[0].text', context);
     assert.match(text, /38\.12/);
