@@ -1121,13 +1121,13 @@
           "lat": 29.9328,
           "lon": 121.896,
           "speed": 0.0,
-          "course": "닝보 베이룬항 입항·정박 완료 (Ningbo Beilun)"
+          "course": "닝보 베이룬 항계 입항·정박 (At anchor · 하역 선석 배정 대기)"
         },
         "lat": 29.9328,
         "lon": 121.896,
         "zoom": 11,
         "speed": 0.0,
-        "course": "입항 완료 (닝보 베이룬항 정박, 11:08 KST)",
+        "course": "닝보 베이룬 항계 정박 (At anchor · 하역 선석 배정 대기)",
         "draught": "7.0m",
         "cargo": "케미칼/석유제품 운반선 (여수·광양 출항 → 닝보 하역)",
         "origin": {
@@ -1140,7 +1140,7 @@
           "name": "중국 닝보항 베이룬 (CN NGB)",
           "lat": 29.9328,
           "lon": 121.896,
-          "eta": "11/16(월) 11:08 KST 닝보 베이룬 항내 정박 (AIS ETA 09:15 대비 약 2시간 지연)"
+          "eta": "11/16(월) 11:08 KST 닝보 베이룬 항계 정박 (AIS ETA 09:15 대비 약 2시간 지연)"
         },
         "pilotRule": "닝보항 VTS 관제 입항 완료 · 하역 후 대만 타이중(TW TXG) 향발 예정",
         "yeosuInbound": false,
@@ -1462,7 +1462,7 @@
               ⚓ <b>선석 접안 완료:</b> 하역/선적 작업 진행 중이며 엔진 정지 및 계류삭 고정 상태입니다.
             </div>`;
         }
-        return `현재 속력은 <span class='highlight-cyan'>${spd.toFixed(1)}노트</span> (침로 <span class='highlight-blue'>${vessel.course || '대기'}</span>)입니다.
+        return `현재 속력은 <span class='highlight-cyan'>${spd.toFixed(1)}노트</span>로 <span class='highlight-blue'>${vessel.course || '정박'}</span> 상태입니다.
           <div style="margin-top:6px;padding:6px 9px;background:rgba(6,182,212,0.12);border-left:3px solid #06b6d4;border-radius:4px;font-size:11.5px;color:#a5f3fc;line-height:1.45;">
             ⚓ <b>외해 정박지 투묘 대기(At Anchor):</b> 목적지 항만 도선사 승선 및 선석 배정 순번 전까지 닻을 내리고 엔진 대기 상태를 유지 중입니다.
           </div>`;
@@ -1471,9 +1471,7 @@
       // 2. 적정 순항속도 대비 저속 운항 (0.5 < spd < 8.0노트)
       if (spd < 8.0) {
         let reasonText = "";
-        if (vessel.id === 'sunrise-sambu' || vessel.name.toUpperCase().includes('SUNRISE')) {
-          reasonText = "오늘 저녁 20시 여수 외해 도착 및 야간 도선 스케줄에 맞추기 위한 선석 대기 방지 감속 운항(Eco Steaming) 및 동중국해 해상 조류 조절로 분석됩니다.";
-        } else if (vessel.pilotRule && vessel.pilotRule.includes('8노트')) {
+        if (vessel.pilotRule && vessel.pilotRule.includes('8노트')) {
           reasonText = "묘도수로 등 항만 연안 협수로 통항 안전속도 제한구역(8노트 이하) 진입에 따른 법정 감속 운항입니다.";
         } else {
           reasonText = `적정 순항속도(${normalSpeed}노트) 대비 저속 운항 중입니다. 목적지 항만의 선석 비움(Berth availability) 일정에 맞춘 경제 감속 항행(Eco Steaming) 또는 해상 너울·역조류 영향 가능성이 있습니다.`;
@@ -1488,10 +1486,8 @@
       // 3. 경제 속도 운항 / 연안 감속 (8.0 <= spd < 10.5노트)
       if (spd < 10.5) {
         let ecoReason = "";
-        if (vessel.id === 'mi-lan' || vessel.name.toUpperCase().includes('MI LAN') || vessel.name.toUpperCase().includes('MILAN')) {
-          ecoReason = "보하이 해협 통항로 밀집 구간 통과 및 오늘 야간 20시 판진항 선적 터미널 입항 일정에 맞춘 경제 순항(Eco Steaming)입니다.";
-        } else if (vessel.id === 'pacific-sambu' || vessel.name.toUpperCase().includes('PACIFIC')) {
-          ecoReason = "울산/온산 복귀 항해 중 연료 소모 최적화 및 항로 기상에 맞춘 경제 순항 운항입니다.";
+        if (vessel.course && (vessel.course.includes('진입') || vessel.course.includes('접근') || vessel.course.includes('출항'))) {
+          ecoReason = `목적지 ${vessel.dest && vessel.dest.name ? vessel.dest.name : '항만'} 진입·이안 구간의 안전속도 조정과 입항 스케줄을 맞춘 경제 순항(Eco Steaming)입니다.`;
         } else {
           ecoReason = `적정 속도(${normalSpeed}노트) 대비 연료 소모 절감 및 입항 스케줄을 조율하는 경제 순항(Eco Speed) 구간입니다.`;
         }
@@ -1517,254 +1513,49 @@
       const briefings = [];
       const uName = (window.currentProfile && window.currentProfile.userName) ? window.currentProfile.userName : '진수 님';
 
-      // 1~5단계: 선박별 실제 항로 및 제원에 1:1 매칭
-      if (vessel.id === 'mi-lan' || vessel.name.toUpperCase().includes('MI LAN') || vessel.name.toUpperCase().includes('MILAN')) {
-        const isArrived = (vessel.dest && vessel.dest.eta && (vessel.dest.eta.includes('완료') || vessel.dest.eta.includes('접안') || vessel.dest.eta.includes('계류')));
-        briefings.push(
-          {
-            tag: "📍 1. 현재 위치",
-            time: simpleTime + " AIS 수신",
-            text: isArrived
-              ? `${uName}! 지금 <b>${vessel.name}</b>호는 <span class='highlight-cyan'>북위 ${vessel.lat.toFixed(2)}°N, 동경 ${vessel.lon.toFixed(2)}°E</span> (판진항 석유화학 전용 부두 선석)에 접안을 마치고 선적 대기 중입니다 🚢`
-              : `${uName}! 지금 <b>${vessel.name}</b>호는 <span class='highlight-cyan'>북위 ${vessel.lat.toFixed(2)}°N, 동경 ${vessel.lon.toFixed(2)}°E</span> (판진항 외해 잉커우항 남서방 해상)에 정박해 선적 대기 중입니다 🚢`
-          },
-          {
-            tag: "⚡ 2. 현재 속도 및 침로",
-            time: simpleTime + " 측정",
-            text: formatSpeedAnalysis(vessel)
-          },
-          {
-            tag: "📦 3. 화물 및 흘수 상태",
-            time: "공선 (선적 대기)",
-            text: `현재 흘수는 <span class='highlight-amber'>${vessel.draught}</span> 상태입니다. ${uName} 말씀대로 여수 하역이 아니라 현지에서 원료를 **선적(적하)**하기 위해 이동해 정박한 공선(Ballast) 상태예요 (3,799 DWT 케미칼/석유제품 운반선).`
-          },
-          {
-            tag: "⏱️ 4. 중국 판진항 도착 예정일 (ETA)",
-            time: isArrived ? "접안 완료" : "실시간 예측",
-            text: `목적지 판진항(Panjin) <span class='highlight-amber'>${vessel.dest.eta}</span> 상태입니다. 11/7 상하이 진산 석화기지를 출항해 항해를 마치고 부두 선석에 접안하여 선적을 준비하고 있습니다.`
-          },
-          {
-            tag: "⚠️ 5. 판진항 접안 및 관제 조건",
-            time: "항만 관제",
-            text: `여수가 아닌 <span class='highlight-amber'>중국 판진항 석유화학 전용 선적 터미널</span>로 접안 완료되었으며, 안전 규정에 따른 선적 작업을 주시하고 있습니다!`
-          }
-        );
-      } else if (vessel.id === 'sunrise-sambu' || vessel.name.toUpperCase().includes('SUNRISE')) {
-        const isArrived = (vessel.dest && vessel.dest.eta && (vessel.dest.eta.includes('접안') || vessel.dest.eta.includes('완료') || vessel.dest.eta.includes('계류')));
-        const drNote = vessel.drActive ? ` <span style='font-size:11px; opacity:0.85; display:block; margin-top:4px;'>🛰️ 위성 실측 기반 실시간 항해 추측항법(DR) 연산 좌표 · 잔여 ${vessel.remainingNm || 0}해리</span>` : '';
-        briefings.push(
-          {
-            tag: "📍 1. 현재 위치",
-            time: simpleTime + " AIS 수신",
-            text: isArrived
-              ? `${uName}! 지금 <b>${vessel.name}</b>호는 <span class='highlight-cyan'>북위 ${vessel.lat.toFixed(2)}°N, 동경 ${vessel.lon.toFixed(2)}°E</span> 여수 중흥부두 선석에 <b>완전 접안(Moored)</b> 완료되었습니다! 🚢⚓`
-              : `${uName}! 지금 <b>${vessel.name}</b>호는 <span class='highlight-cyan'>북위 ${vessel.lat.toFixed(2)}°N, 동경 ${vessel.lon.toFixed(2)}°E</span> 여수로 북상 중입니다 🚢${drNote}`
-          },
-          {
-            tag: "⚡ 2. 현재 속도 및 침로",
-            time: simpleTime + " 측정",
-            text: formatSpeedAnalysis(vessel)
-          },
-          {
-            tag: "📦 3. 화물 및 흘수 상태",
-            time: isArrived ? "하역 준비" : "만재 상태",
-            text: isArrived
-              ? `화물은 여수공장 투입용 <b>${vessel.cargo}</b> 제원이며, 현재 흘수는 <span class='highlight-amber'>${vessel.draught}</span>로 선석에 계류하여 하역 파이프라인 연결 및 준비 단계입니다.`
-              : `화물은 여수공장 투입용 <b>${vessel.cargo}</b> 상태이며, 현재 흘수는 <span class='highlight-amber'>${vessel.draught}</span>로 만재 기준에 가깝게 가라앉아 항해 중입니다.`
-          },
-          {
-            tag: "⏱️ 4. 여수 중흥부두 도착 예정일 (ETA)",
-            time: isArrived ? "입항 완료" : "실시간 연산",
-            text: isArrived
-              ? `여수 중흥부두에 <span class='highlight-amber'>${vessel.dest.eta}</span> 상태입니다. 항해를 성공적으로 마치고 공장 원료 하역 단계에 돌입했습니다!`
-              : `여수 외해 도착 예정 시간은 <span class='highlight-amber'>${vessel.computedEta || vessel.dest.eta}</span>입니다. 여수 외해 도선점까지 잔여 거리는 약 <span class='highlight-cyan'>${vessel.remainingNm || 220}해리</span>로 순항 중입니다.`
-          },
-          {
-            tag: "⚠️ 5. 중흥부두 접안 및 통항 조건",
-            time: isArrived ? "접안 완료" : "산단 안전규정",
-            text: isArrived
-              ? `묘도수로 통항을 무사히 마치고 <span class='highlight-amber'>여수 중흥부두 선석 접안 완료</span>되었습니다. 하역 작업 및 본선 안전 상태를 모니터링 중입니다.`
-              : `중흥부두는 묘도수로를 거쳐야 해서 <span class='highlight-amber'>${vessel.pilotRule}</span>을 받아요. 도선사 승선 및 실제 선석 접안 스케줄 변동 시 즉시 알려드릴게요 ㅎㅎ`
-          }
-        );
-      } else if (vessel.id === 'yc-cosmos' || vessel.name.toUpperCase().includes('COSMOS')) {
-        briefings.push(
-          {
-            tag: "📍 1. 현재 위치",
-            time: simpleTime + " AIS 수신",
-            text: `${uName}! 지금 <b>${vessel.name}</b>호는 <span class='highlight-cyan'>북위 ${vessel.lat.toFixed(2)}°N, 동경 ${vessel.lon.toFixed(2)}°E</span> (광양/여수 외해 정박지)에 투묘 대기 중이에요 🚢`
-          },
-          {
-            tag: "⚡ 2. 현재 속도 및 침로",
-            time: simpleTime + " 측정",
-            text: formatSpeedAnalysis(vessel)
-          },
-          {
-            tag: "📦 3. 화물 및 흘수 상태",
-            time: "만재 상태",
-            text: `화물은 <b>${vessel.cargo}</b> 제원이며, 현재 흘수는 <span class='highlight-amber'>${vessel.draught}</span>로 하역 대기 상태입니다.`
-          },
-          {
-            tag: "⏱️ 4. 여수/광양 석화부두 입항 스케줄",
-            time: "접안 대기",
-            text: `외해 정박지 투묘 대기 중이며, 항만 하역 선석 배정 순번에 따라 접안 일정이 확정될 예정입니다.`
-          },
-          {
-            tag: "⚠️ 5. 부두 접안 및 관제 조건",
-            time: "해상 교통관제",
-            text: `<span class='highlight-amber'>${vessel.pilotRule}</span> 하에 도선사 승선 승인 대기 중이며, 접안 시간 배정 시 실시간으로 알려드릴게요!`
-          }
-        );
-      } else if (vessel.id === 'tn-idun' || vessel.name.toUpperCase().includes('IDUN')) {
-        const isNearYeosu = (vessel.lat >= 34.2);
-        briefings.push(
-          {
-            tag: "📍 1. 현재 위치",
-            time: simpleTime + " 위성 수신",
-            text: isNearYeosu
-              ? `${uName}! <b>${vessel.name}</b>호는 <span class='highlight-cyan'>북위 ${vessel.lat.toFixed(2)}°N, 동경 ${vessel.lon.toFixed(2)}°E</span> (나로도 동방 39km 해상)를 지나 여수 외해 도선점 방면으로 진입 중이에요 🚢`
-              : `${uName}! <b>${vessel.name}</b>호는 <span class='highlight-cyan'>북위 ${vessel.lat.toFixed(2)}°N, 동경 ${vessel.lon.toFixed(2)}°E</span> (추자도 북동방 남해 통항로)를 따라 여수로 순항 중이에요 🚢`
-          },
-          {
-            tag: "⚡ 2. 현재 속도 및 침로",
-            time: simpleTime + " 측정",
-            text: formatSpeedAnalysis(vessel)
-          },
-          {
-            tag: "📦 3. 화물 및 흘수 상태",
-            time: "적재 상태",
-            text: `<b>${vessel.cargo}</b> 제원으로 대산 석화부두 출항 후 현재 흘수는 <span class='highlight-amber'>${vessel.draught}</span> 상태입니다.`
-          },
-          {
-            tag: "⏱️ 4. 여수항 석화부두 입항 스케줄",
-            time: "일정 현황",
-            text: `11/11 대산 출항 ➡️ 남해 진입 후 <span class='highlight-amber'>${vessel.dest.eta}</span> 상태입니다. 오늘 밤 여수 도선점 진입이 예상됩니다.`
-          },
-          {
-            tag: "⚠️ 5. 여수항 접안 및 관제 조건",
-            time: "항만 관제",
-            text: `<span class='highlight-amber'>${vessel.pilotRule}</span>에 따라 도선점 진입 예정이며, 변동 발생 시 바로 업데이트해 드릴게요!`
-          }
-        );
-      } else if (vessel.id === 'pacific-sambu' || vessel.name.toUpperCase().includes('PACIFIC')) {
-        const isHomeward = (vessel.dest && vessel.dest.name && (vessel.dest.name.includes('울산') || vessel.dest.name.includes('온산') || vessel.dest.name.includes('KR')));
-        briefings.push(
-          {
-            tag: "📍 1. 현재 위치",
-            time: simpleTime + " AIS 수신",
-            text: isHomeward
-              ? `${uName}! 지금 <b>${vessel.name}</b>호는 <span class='highlight-cyan'>북위 ${vessel.lat.toFixed(2)}°N, 동경 ${vessel.lon.toFixed(2)}°E</span> (일본 혼슈 남안 이즈반도 외해)를 통과하여 한국 울산/온산항으로 순항 복귀 중입니다 🚢`
-              : `${uName}! 지금 <b>${vessel.name}</b>호는 <span class='highlight-cyan'>북위 ${vessel.lat.toFixed(2)}°N, 동경 ${vessel.lon.toFixed(2)}°E</span> (일본 도쿄만 요코하마 외해 정박지)에 투묘 대기 중입니다 🚢`
-          },
-          {
-            tag: "⚡ 2. 현재 속도 및 침로",
-            time: simpleTime + " 측정",
-            text: formatSpeedAnalysis(vessel)
-          },
-          {
-            tag: "📦 3. 화물 및 흘수 상태",
-            time: isHomeward ? "공선 복귀" : "하역 대기",
-            text: isHomeward
-              ? `요코하마 하역을 마치고 현재 흘수는 <span class='highlight-amber'>${vessel.draught}</span>로 울산/온산 원료 선적을 위해 복귀하는 공선(Ballast) 상태입니다.`
-              : `화물은 <b>${vessel.cargo}</b> 상태이며 현재 흘수는 <span class='highlight-amber'>${vessel.draught}</span>입니다.`
-          },
-          {
-            tag: isHomeward ? "⏱️ 4. 울산/온산항 도착 예정일 (ETA)" : "⏱️ 4. 요코하마 도착 현황",
-            time: isHomeward ? "항해 중" : "정박 대기",
-            text: isHomeward
-              ? `목적지 울산/온산항 <span class='highlight-amber'>${vessel.dest.eta}</span> 상태입니다. 일본 연안을 따라 11.5노트로 쾌속 순항 중입니다.`
-              : `온산 출항 후 요코하마 외해 도착 완료, <span class='highlight-amber'>${vessel.dest.eta}</span> 상태입니다.`
-          },
-          {
-            tag: "⚠️ 5. 항만 관제 조건",
-            time: isHomeward ? "항만 관제" : "접안 대기",
-            text: isHomeward
-              ? `<span class='highlight-amber'>${vessel.pilotRule}</span>에 따라 태평양 연안 항로를 거쳐 대한해협으로 진입할 예정입니다.`
-              : `도쿄만 관제(Tokyo Bay VTS) 통제 하에 정박지 대기 중이며, 선석 배정 시 이동 예정입니다.`
-          }
-        );
-      } else if (vessel.id === 'grace-sambu' || vessel.name.toUpperCase().includes('GRACE')) {
-        briefings.push(
-          {
-            tag: "📍 1. 현재 위치",
-            time: simpleTime + " 계류 중",
-            text: `<b>${vessel.name}</b>호는 <span class='highlight-cyan'>북위 ${vessel.lat.toFixed(4)}° N, 동경 ${vessel.lon.toFixed(4)}° E</span> 여수 낙포부두에 무사히 접안해 있습니다! ✅`
-          },
-          {
-            tag: "⚡ 2. 현재 속도 및 침로",
-            time: simpleTime + " 측정",
-            text: formatSpeedAnalysis(vessel)
-          },
-          {
-            tag: "📦 3. 화물 및 흘수 상태",
-            time: "하역 중",
-            text: `울산에서 수송해 온 석유화학 원료 모노머 하역 작업 중이며, 현재 흘수는 <span class='highlight-amber'>${vessel.draught}</span>입니다.`
-          },
-          {
-            tag: "⏱️ 4. 낙포부두 하역 현황",
-            time: "하역 진행",
-            text: `선석 하역이 차질 없이 진행 중이며, 하역 완료 후 출항(ETD) 일정이 확정되면 바로 챙겨드릴게요!`
-          },
-          {
-            tag: "⚠️ 5. 낙포부두 관제 조건",
-            time: "통항 허가",
-            text: `낙포부두 선석 하역 완료 시 묘도수로 통항 허가 확인 후 출항 예정입니다.`
-          }
-        );
-      } else {
-        // 검색으로 동적 등록된 일반 선박 브리핑
-        const destTitle = vessel.dest && vessel.dest.name ? vessel.dest.name : "목적지 항만";
-        const originTitle = vessel.origin && vessel.origin.name ? vessel.origin.name : "출발항";
-        const isBallast = (vessel.draught && (vessel.draught.includes('공선') || vessel.draught.includes('선적 대기'))) ||
-                          (vessel.cargo && (vessel.cargo.includes('실으러') || vessel.cargo.includes('선적')));
+      // 1~5단계: 말풍선은 fleet.json 실측 레코드(course·cargo·draught·dest·pilotRule)에서 직접 생성한다.
+      // 배 이름별 고정 문구를 두면 정기 갱신 뒤 실제 위치·상태와 어긋나므로, 데이터가 곧 브리핑이 되게 한다.
+      const spd = typeof vessel.speed === 'number' ? vessel.speed : (parseFloat(vessel.speed) || 0);
+      const isStopped = spd <= 0.5;
+      const destName = (vessel.dest && vessel.dest.name) ? vessel.dest.name : "목적지 항만";
+      const destLabel = destName.replace(/\s*\([^)]*\)/g, '').trim() || destName;
+      const destEta = (vessel.dest && vessel.dest.eta) ? vessel.dest.eta : "입항 스케줄 확인 중";
+      const originName = (vessel.origin && vessel.origin.name) ? vessel.origin.name : "출발항";
+      const originTime = (vessel.origin && vessel.origin.time) ? vessel.origin.time : "";
+      const situation = vessel.course || (isStopped ? "정박 중" : "항해 중");
+      const stoppedKind = !isStopped ? "항해 중"
+        : ((situation.includes('묘박') || situation.includes('투묘') || situation.includes('닻') || situation.toLowerCase().includes('anchor')) ? "묘박지 대기" : "부두 정박");
+      const drNote = vessel.drActive
+        ? ` <span style='font-size:11px; opacity:0.85; display:block; margin-top:4px;'>🛰️ 위성 실측 기반 추측항법(DR) 좌표 · 잔여 ${vessel.remainingNm || 0}해리</span>`
+        : '';
 
-        let cargoText = isBallast ?
-          `현재 흘수는 <span class='highlight-amber'>${vessel.draught || '4.5m'}</span> 상태입니다. 목적지 <b>${destTitle}</b>에서 화물을 **선적(적하)**하기 위해 이동하는 공선/선적 대기 상태예요.` :
-          `화물은 <b>${vessel.cargo || '석유화학 케미칼 제품'}</b>이며, 현재 흘수는 <span class='highlight-amber'>${vessel.draught || '5.5m'}</span> 상태입니다.`;
-
-        let ruleText = vessel.pilotRule;
-        if (!ruleText) {
-          if (destTitle.includes('중흥')) {
-            ruleText = "여수 묘도수로 단독통항(8노트 제한) 및 도선사 승선 수칙 적용";
-          } else if (destTitle.includes('대산')) {
-            ruleText = "대산항 조석 및 VTS 도선사 승선 순번에 따른 선석 접안";
-          } else if (destTitle.includes('울산')) {
-            ruleText = "울산항 액체화물 전용 선석 VTS 관제 수칙 적용";
-          } else if (destTitle.includes('중국') || destTitle.includes('판진') || destTitle.includes('Panjin')) {
-            ruleText = "중국 현지 항만 VTS 관제 및 석유화학 선적 터미널 배정 대기";
-          } else {
-            ruleText = `${destTitle} 관제 센터 VTS 통항 규칙 및 선석 배정 현황 주시`;
-          }
+      briefings.push(
+        {
+          tag: "📍 1. 현재 위치",
+          time: simpleTime + " AIS 수신",
+          text: `${uName}! 지금 <b>${vessel.name}</b>호는 <span class='highlight-cyan'>북위 ${vessel.lat.toFixed(2)}°N, 동경 ${vessel.lon.toFixed(2)}°E</span> — ${situation}${isStopped ? ' ⚓' : ' 🚢'}${drNote}`
+        },
+        {
+          tag: "⚡ 2. 현재 속도 및 침로",
+          time: simpleTime + " 측정",
+          text: formatSpeedAnalysis(vessel)
+        },
+        {
+          tag: "📦 3. 화물 및 흘수 상태",
+          time: stoppedKind,
+          text: `화물은 <b>${vessel.cargo || '석유화학 케미칼 제품'}</b>, 현재 흘수는 <span class='highlight-amber'>${vessel.draught || '확인 중'}</span>입니다.`
+        },
+        {
+          tag: `⏱️ 4. ${destLabel} 도착 예정 (ETA)`,
+          time: isStopped ? stoppedKind : "실시간 연산",
+          text: `목적지 <b>${destName}</b> — <span class='highlight-amber'>${vessel.computedEta || destEta}</span>${originTime ? `<br><span style='font-size:11px;opacity:0.85'>출항: ${originName} ${originTime}</span>` : ''}`
+        },
+        {
+          tag: `⚠️ 5. ${destLabel} 접안 및 관제 조건`,
+          time: "항만 관제",
+          text: `<span class='highlight-amber'>${vessel.pilotRule || '항만 VTS 관제 및 도선사 승선 수칙 적용'}</span> 상태를 주시 중입니다.`
         }
-
-        briefings.push(
-          {
-            tag: "📍 1. 현재 위치",
-            time: simpleTime + " 실시간 수신",
-            text: `${uName}! 지금 <b>${vessel.name}</b>호는 <span class='highlight-cyan'>북위 ${vessel.lat.toFixed(2)}°N, 동경 ${vessel.lon.toFixed(2)}°E</span> 해역을 항해 중입니다 🚢`
-          },
-          {
-            tag: "⚡ 2. 현재 속도 및 침로",
-            time: simpleTime + " 측정",
-            text: formatSpeedAnalysis(vessel)
-          },
-          {
-            tag: "📦 3. 화물 및 흘수 상태",
-            time: isBallast ? "선적 대기" : "화물 상태",
-            text: cargoText
-          },
-          {
-            tag: `⏱️ 4. ${destTitle} 도착 예정일 (ETA)`,
-            time: "실시간 예측",
-            text: `목적지 <b>${destTitle}</b> 도착 예정 시간은 <span class='highlight-amber'>${vessel.dest && vessel.dest.eta ? vessel.dest.eta : '입항 스케줄 확인 중'}</span>입니다.`
-          },
-          {
-            tag: `⚠️ 5. ${destTitle} 접안 및 관제 조건`,
-            time: "항만 관제",
-            text: `<span class='highlight-amber'>${ruleText}</span> 상태를 주시 중입니다!`
-          }
-        );
-      }
+      );
 
       // [선택적 6단계] 진수 님의 아이디어: 여수 도착 여부 및 공장 연계 계획 (배에 따라 넣다 뺐다!)
       const isYeosuBound = (vessel.yeosuInbound !== false) && (
